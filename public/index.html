@@ -44,18 +44,11 @@
       <input id="inp-name" type="text" placeholder="Your name..." maxlength="20" autocomplete="off">
     </div>
     <button id="btn-rules-home" class="btn-rules-link">📖 How to Play</button>
-    <div class="tabs">
-      <button class="tab active" data-tab="create">Create Room</button>
-      <button class="tab" data-tab="join">Join Room</button>
-    </div>
-    <div id="tab-create" class="tab-pane active">
-      <button id="btn-create" class="btn-primary btn-lg">Create Room</button>
-    </div>
-    <div id="tab-join" class="tab-pane">
-      <div class="form-row row-inline">
-        <input id="inp-code" type="text" placeholder="Room code" maxlength="6" autocomplete="off" style="text-transform:uppercase">
-        <button id="btn-join" class="btn-primary">Join</button>
-      </div>
+    <button id="btn-create" class="btn-primary btn-lg">Create Room</button>
+    <div class="join-divider"><span>or join with a code</span></div>
+    <div class="form-row row-inline">
+      <input id="inp-code" type="text" placeholder="Room code" maxlength="6" autocomplete="off" style="text-transform:uppercase">
+      <button id="btn-join" class="btn-primary">Join</button>
     </div>
     <div id="home-error" class="error-msg hidden"></div>
   </div>

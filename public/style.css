@@ -96,12 +96,9 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .row-inline { display: flex; gap: 10px; }
 .row-inline input { flex: 1; }
 
-.tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--surface); border-radius: 8px; padding: 4px; }
-.tab { flex: 1; background: transparent; color: var(--muted); padding: 8px; border-radius: 6px; font-weight: 600; font-size: 0.9rem; }
-.tab.active { background: var(--card); color: var(--text); }
-.tab-pane { display: none; }
-.tab-pane.active { display: block; }
-.tab-pane .btn-primary { width: 100%; }
+#btn-create { width: 100%; margin-bottom: 4px; }
+.join-divider { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 0.82rem; margin: 12px 0; }
+.join-divider::before, .join-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
 .error-msg { color: var(--red); font-size: 0.875rem; margin-top: 10px; }
 

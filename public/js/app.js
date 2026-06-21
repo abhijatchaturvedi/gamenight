@@ -196,15 +196,6 @@ function initHome() {
   document.querySelector('[data-game="killerdoctor"]').classList.add('selected');
   App.selectedGame = 'killerdoctor';
 
-  document.querySelectorAll('.tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
-    });
-  });
-
   document.getElementById('btn-create').addEventListener('click', () => {
     const name = document.getElementById('inp-name').value.trim();
     if (!name) { showError('home-error', 'Please enter your name.'); return; }
@@ -217,8 +208,8 @@ function initHome() {
   document.getElementById('inp-code').addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(); });
   document.getElementById('inp-name').addEventListener('keydown', e => {
     if (e.key === 'Enter') {
-      const tab = document.querySelector('.tab.active');
-      if (tab?.dataset.tab === 'join') doJoin(); else document.getElementById('btn-create').click();
+      const code = document.getElementById('inp-code').value.trim();
+      if (code) doJoin(); else document.getElementById('btn-create').click();
     }
   });
 }
