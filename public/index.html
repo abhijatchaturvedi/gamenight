@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameNight</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══════════════════════ HOME ══════════════════════ -->
+<div id="view-home" class="view active">
+  <header class="home-header">
+    <div class="logo">🎮 GameNight</div>
+    <p class="tagline">Party games, no app required</p>
+  </header>
+
+  <div class="game-selector">
+    <h2>Choose a game</h2>
+    <div class="game-cards">
+      <div class="game-card" data-game="tictactoe">
+        <div class="game-icon">⭕</div>
+        <h3>Tic Tac Toe</h3>
+        <p>Classic 1v1 showdown</p>
+        <span class="badge">2 players</span>
+      </div>
+      <div class="game-card" data-game="killerdoctor">
+        <div class="game-icon">🔪</div>
+        <h3>Killer Doctor</h3>
+        <p>Social deduction party game</p>
+        <span class="badge">4–15 players</span>
+      </div>
+      <div class="game-card" data-game="scribble">
+        <div class="game-icon">🎨</div>
+        <h3>Scribble</h3>
+        <p>Draw and guess words</p>
+        <span class="badge">3+ players</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="join-box">
+    <div class="form-row">
+      <input id="inp-name" type="text" placeholder="Your name..." maxlength="20" autocomplete="off">
+    </div>
+    <button id="btn-rules-home" class="btn-rules-link">📖 How to Play</button>
+    <div class="tabs">
+      <button class="tab active" data-tab="create">Create Room</button>
+      <button class="tab" data-tab="join">Join Room</button>
+    </div>
+    <div id="tab-create" class="tab-pane active">
+      <button id="btn-create" class="btn-primary btn-lg">Create Room</button>
+    </div>
+    <div id="tab-join" class="tab-pane">
+      <div class="form-row row-inline">
+        <input id="inp-code" type="text" placeholder="Room code" maxlength="6" autocomplete="off" style="text-transform:uppercase">
+        <button id="btn-join" class="btn-primary">Join</button>
+      </div>
+    </div>
+    <div id="home-error" class="error-msg hidden"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ LOBBY ══════════════════════ -->
+<div id="view-lobby" class="view">
+  <div class="lobby-container">
+    <div class="lobby-header">
+      <div>
+        <h2 id="lobby-title">Lobby</h2>
+        <div class="room-code-row">
+          <span>Room Code:</span>
+          <strong id="lobby-code" class="code-display"></strong>
+          <button id="btn-copy" class="btn-icon" title="Copy code">⧉</button>
+        </div>
+      </div>
+      <div class="lobby-header-actions">
+        <button id="btn-rules-lobby" class="btn-ghost btn-sm">📖 Rules</button>
+        <button id="btn-leave" class="btn-ghost">Leave</button>
+      </div>
+    </div>
+
+    <div class="lobby-players-grid" id="lobby-players"></div>
+
+    <!-- Settings panel -->
+    <div class="settings-panel" id="lobby-settings-panel">
+      <button class="settings-toggle" id="btn-settings-toggle">
+        <span>⚙️ Game Settings</span>
+        <span class="settings-chevron" id="settings-chevron">▾</span>
+      </button>
+      <div id="lobby-settings-body" class="settings-body hidden">
+        <div id="lobby-settings-fields" class="settings-fields"></div>
+        <div id="settings-host-actions" class="settings-host-actions hidden">
+          <button id="btn-save-settings" class="btn-primary btn-sm">Save Settings</button>
+          <span id="settings-saved-msg" class="settings-saved hidden">✓ Saved</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="lobby-footer">
+      <p id="lobby-status" class="muted"></p>
+      <div class="lobby-actions">
+        <button id="btn-start" class="btn-primary btn-lg" disabled>Start Game</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TIC TAC TOE ══════════════════════ -->
+<div id="view-tictactoe" class="view">
+  <div class="ttt-container">
+    <div class="ttt-header">
+      <h2>Tic Tac Toe</h2>
+      <button class="btn-ghost" id="ttt-leave">← Leave</button>
+    </div>
+
+    <div class="ttt-scoreboard">
+      <div class="ttt-score-card" id="ttt-score-X">
+        <div class="ttt-symbol x-sym">✕</div>
+        <div id="ttt-name-X">Player X</div>
+        <div id="ttt-pts-X" class="score-pts">0</div>
+      </div>
+      <div class="ttt-vs">VS</div>
+      <div class="ttt-score-card" id="ttt-score-O">
+        <div class="ttt-symbol o-sym">○</div>
+        <div id="ttt-name-O">Player O</div>
+        <div id="ttt-pts-O" class="score-pts">0</div>
+      </div>
+    </div>
+
+    <div id="ttt-status" class="ttt-status-bar"></div>
+
+    <div id="ttt-board" class="ttt-board">
+      <div class="ttt-cell" data-i="0"></div>
+      <div class="ttt-cell" data-i="1"></div>
+      <div class="ttt-cell" data-i="2"></div>
+      <div class="ttt-cell" data-i="3"></div>
+      <div class="ttt-cell" data-i="4"></div>
+      <div class="ttt-cell" data-i="5"></div>
+      <div class="ttt-cell" data-i="6"></div>
+      <div class="ttt-cell" data-i="7"></div>
+      <div class="ttt-cell" data-i="8"></div>
+    </div>
+
+    <div id="ttt-match-label" class="ttt-match-label hidden"></div>
+
+    <div id="ttt-result" class="ttt-result hidden">
+      <div id="ttt-result-text"></div>
+      <div class="ttt-result-actions" id="ttt-host-only" style="display:none">
+        <button id="btn-ttt-again" class="btn-primary">Next Game</button>
+        <button id="btn-ttt-new-match" class="btn-primary hidden">New Match</button>
+        <button id="btn-ttt-lobby" class="btn-ghost">Back to Lobby</button>
+      </div>
+    </div>
+
+    <div id="ttt-spectating" class="spectator-badge hidden">👁 Spectating</div>
+  </div>
+</div>
+
+<!-- ══════════════════════ KILLER DOCTOR ══════════════════════ -->
+<div id="view-killerdoctor" class="view">
+  <div class="kd-layout">
+
+    <!-- Side panel -->
+    <aside class="kd-sidebar">
+      <div class="kd-role-card" id="kd-role-card">
+        <div class="role-label">Your Role</div>
+        <div id="kd-role-name" class="role-name">—</div>
+        <div id="kd-role-desc" class="role-desc"></div>
+        <button id="kd-toggle-role" class="btn-ghost btn-sm">Hide Role</button>
+      </div>
+      <div id="kd-you-status" class="kd-you-status">🟢 Alive</div>
+
+      <div class="kd-player-list-wrap">
+        <h4>Players</h4>
+        <div id="kd-player-list" class="kd-player-list"></div>
+      </div>
+
+      <div class="kd-history-wrap">
+        <h4>History</h4>
+        <div id="kd-history" class="kd-history"></div>
+      </div>
+    </aside>
+
+    <!-- Main area -->
+    <main class="kd-main">
+      <!-- Role Reveal Phase -->
+      <div id="kd-phase-reveal" class="kd-phase active">
+        <div class="phase-splash night-splash">
+          <div class="phase-icon anim-pulse">🌙</div>
+          <h2>Roles Assigned</h2>
+          <p>Check your secret role on the left. Keep it hidden from others!</p>
+          <p class="muted">Night begins in a few seconds…</p>
+        </div>
+      </div>
+
+      <!-- Night Phase -->
+      <div id="kd-phase-night" class="kd-phase">
+        <div class="night-bg">
+          <div class="phase-splash">
+            <div class="phase-icon">🌑</div>
+            <h2 id="kd-night-title">Night Falls</h2>
+            <p id="kd-night-subtitle">The village sleeps…</p>
+          </div>
+
+          <div id="kd-night-action" class="kd-action-panel hidden">
+            <div id="kd-action-title" class="action-title"></div>
+            <div id="kd-action-desc" class="action-desc"></div>
+            <div id="kd-action-targets" class="target-grid"></div>
+            <div id="kd-action-done" class="action-done hidden">✓ Action submitted</div>
+          </div>
+
+          <div class="night-timer-wrap">
+            <div id="kd-night-timer" class="countdown hidden"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Night Result -->
+      <div id="kd-phase-night-result" class="kd-phase">
+        <div class="phase-splash dawn-splash">
+          <div class="phase-icon anim-pop">🌅</div>
+          <h2>Dawn Breaks</h2>
+          <p id="kd-night-msg" class="result-message"></p>
+        </div>
+      </div>
+
+      <!-- Day Discussion -->
+      <div id="kd-phase-discussion" class="kd-phase">
+        <div class="day-layout">
+          <div class="day-header">
+            <div>
+              <h2 id="kd-day-title">Day Discussion</h2>
+              <p class="muted">Debate who the Killer might be</p>
+            </div>
+            <div class="timer-badge">
+              <div class="timer-label">Time</div>
+              <div id="kd-day-timer" class="timer-display">2:00</div>
+            </div>
+          </div>
+          <div class="chat-box">
+            <div id="kd-chat-messages" class="chat-messages"></div>
+            <div class="chat-input-row">
+              <input id="kd-chat-input" type="text" placeholder="Say something…" maxlength="200" autocomplete="off">
+              <button id="kd-chat-send" class="btn-primary">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Voting Phase -->
+      <div id="kd-phase-voting" class="kd-phase">
+        <div class="day-layout">
+          <div class="day-header">
+            <div>
+              <h2>Vote to Eliminate</h2>
+              <p class="muted">Choose who you think is the Killer</p>
+            </div>
+            <div class="timer-badge">
+              <div class="timer-label">Time</div>
+              <div id="kd-vote-timer" class="timer-display">1:00</div>
+            </div>
+          </div>
+          <div id="kd-vote-progress" class="vote-progress-bar"></div>
+          <div id="kd-vote-targets" class="vote-grid"></div>
+          <div id="kd-voted-notice" class="voted-notice hidden">✓ Vote cast</div>
+          <div id="kd-dead-notice" class="spectator-badge hidden">👻 You are dead — watching only</div>
+        </div>
+      </div>
+
+      <!-- Vote Result -->
+      <div id="kd-phase-vote-result" class="kd-phase">
+        <div class="phase-splash">
+          <div class="phase-icon anim-pop" id="kd-elim-icon">⚖️</div>
+          <h2 id="kd-elim-title">Verdict</h2>
+          <p id="kd-elim-msg" class="result-message"></p>
+          <div id="kd-elim-reveal" class="role-reveal-card hidden"></div>
+          <div id="kd-vote-detail" class="vote-detail"></div>
+          <p class="muted" id="kd-next-label">Next round beginning…</p>
+        </div>
+      </div>
+
+      <!-- Game Over -->
+      <div id="kd-phase-gameover" class="kd-phase">
+        <div class="phase-splash gameover-splash">
+          <div class="phase-icon anim-pop" id="kd-win-icon">🏆</div>
+          <h2 id="kd-win-title">Game Over</h2>
+          <p id="kd-win-reason" class="result-message"></p>
+          <div id="kd-final-players" class="final-player-grid"></div>
+          <div id="kd-final-history" class="final-history"></div>
+          <div class="gameover-actions">
+            <button id="kd-btn-again" class="btn-primary btn-lg">Play Again</button>
+            <button id="kd-btn-lobby" class="btn-ghost">Back to Lobby</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════════════ SCRIBBLE ══════════════════════ -->
+<div id="view-scribble" class="view">
+  <div class="scribble-layout">
+
+    <!-- Left: scores -->
+    <aside class="scribble-sidebar">
+      <div class="scribble-round-info">
+        <span id="scb-round-label">Round 1 / 3</span>
+      </div>
+      <div id="scb-player-list" class="scb-player-list"></div>
+    </aside>
+
+    <!-- Center: canvas -->
+    <main class="scribble-center">
+      <div class="scribble-top-bar">
+        <div id="scb-drawer-label" class="scb-drawer-label"></div>
+        <div id="scb-word-display" class="scb-word-display"></div>
+        <div class="timer-badge">
+          <div id="scb-timer" class="timer-display">1:20</div>
+        </div>
+      </div>
+
+      <!-- Word chooser (drawer only) -->
+      <div id="scb-word-chooser" class="scb-word-chooser hidden">
+        <h3>Choose a word to draw!</h3>
+        <div id="scb-word-options" class="scb-word-options"></div>
+        <p class="muted" id="scb-choose-countdown">Auto-selecting in 15s…</p>
+      </div>
+
+      <canvas id="scb-canvas" width="800" height="500"></canvas>
+
+      <!-- Drawing tools -->
+      <div id="scb-tools" class="scb-tools hidden">
+        <div class="tool-group">
+          <button class="tool-btn active" data-tool="pencil" title="Pencil">✏️</button>
+          <button class="tool-btn" data-tool="eraser" title="Eraser">🔲</button>
+          <button class="tool-btn" data-tool="fill" title="Fill">🪣</button>
+        </div>
+        <div class="tool-group">
+          <label class="color-swatch-wrap">
+            <input type="color" id="scb-color" value="#000000">
+          </label>
+          <div class="color-presets">
+            <div class="color-dot" style="background:#000000" data-color="#000000"></div>
+            <div class="color-dot" style="background:#ffffff" data-color="#ffffff"></div>
+            <div class="color-dot" style="background:#ef4444" data-color="#ef4444"></div>
+            <div class="color-dot" style="background:#f97316" data-color="#f97316"></div>
+            <div class="color-dot" style="background:#eab308" data-color="#eab308"></div>
+            <div class="color-dot" style="background:#22c55e" data-color="#22c55e"></div>
+            <div class="color-dot" style="background:#3b82f6" data-color="#3b82f6"></div>
+            <div class="color-dot" style="background:#a855f7" data-color="#a855f7"></div>
+            <div class="color-dot" style="background:#ec4899" data-color="#ec4899"></div>
+            <div class="color-dot" style="background:#6b7280" data-color="#6b7280"></div>
+            <div class="color-dot" style="background:#92400e" data-color="#92400e"></div>
+            <div class="color-dot" style="background:#164e63" data-color="#164e63"></div>
+          </div>
+        </div>
+        <div class="tool-group">
+          <input type="range" id="scb-size" min="2" max="40" value="5">
+          <span id="scb-size-label">5px</span>
+        </div>
+        <button id="scb-clear" class="btn-danger btn-sm">Clear</button>
+      </div>
+    </main>
+
+    <!-- Right: chat -->
+    <aside class="scribble-chat">
+      <div id="scb-chat-messages" class="chat-messages"></div>
+      <div class="chat-input-row">
+        <input id="scb-chat-input" type="text" placeholder="Type your guess…" maxlength="100" autocomplete="off">
+        <button id="scb-chat-send" class="btn-primary">↵</button>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Overlays -->
+  <div id="scb-overlay-round-end" class="scb-overlay hidden">
+    <div class="overlay-card">
+      <h2>Round Over!</h2>
+      <p id="scb-overlay-word">The word was: <strong></strong></p>
+      <div id="scb-overlay-scores" class="overlay-scores"></div>
+    </div>
+  </div>
+
+  <div id="scb-overlay-gameover" class="scb-overlay hidden">
+    <div class="overlay-card">
+      <div class="phase-icon anim-pop">🏆</div>
+      <h2>Game Over!</h2>
+      <div id="scb-final-scores" class="overlay-scores"></div>
+      <div class="gameover-actions">
+        <button id="scb-btn-again" class="btn-primary btn-lg">Play Again</button>
+        <button id="scb-btn-lobby" class="btn-ghost">Back to Lobby</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="scb-overlay-guessed" class="scb-overlay-banner hidden">
+    🎉 You guessed it! Spectating…
+  </div>
+</div>
+
+<!-- ══════════════════════ RULES MODAL ══════════════════════ -->
+<div id="rules-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>📖 How to Play</h2>
+      <button id="close-rules" class="btn-icon modal-close">✕</button>
+    </div>
+    <div class="rules-game-tabs">
+      <button class="rules-tab active" data-game="killerdoctor">🔪 Killer Doctor</button>
+      <button class="rules-tab" data-game="tictactoe">⭕ Tic Tac Toe</button>
+      <button class="rules-tab" data-game="scribble">🎨 Scribble</button>
+    </div>
+
+    <!-- Killer Doctor Rules -->
+    <div id="rules-killerdoctor" class="rules-content active">
+      <p class="rules-intro">A social deduction game. One player is secretly the Killer. Can the village find them before it's too late?</p>
+
+      <h3>🎭 Roles</h3>
+      <div class="rules-role-cards">
+        <div class="rules-role-card killer">
+          <div class="rules-role-icon">🔪</div>
+          <div class="rules-role-name">Killer</div>
+          <div class="rules-role-desc">Each night, secretly eliminate one player. Avoid suspicion during the day. Win by reducing players to 2.</div>
+        </div>
+        <div class="rules-role-card doctor">
+          <div class="rules-role-icon">💉</div>
+          <div class="rules-role-name">Doctor</div>
+          <div class="rules-role-desc">Each night, secretly protect one player (including yourself). If you save the Killer's target, nobody dies.</div>
+        </div>
+        <div class="rules-role-card villager">
+          <div class="rules-role-icon">🧑</div>
+          <div class="rules-role-name">Villager</div>
+          <div class="rules-role-desc">You have no special power — but your vote counts. Debate, accuse, and eliminate the Killer to win.</div>
+        </div>
+      </div>
+
+      <h3>🔄 Game Flow</h3>
+      <div class="rules-steps">
+        <div class="rules-step"><span class="step-num">1</span><div><strong>Roles assigned</strong> — Each player receives a secret role. Do not reveal it!</div></div>
+        <div class="rules-step"><span class="step-num">2</span><div><strong>Night falls</strong> — The Killer picks a victim. The Doctor picks someone to protect. Both choose in secret.</div></div>
+        <div class="rules-step"><span class="step-num">3</span><div><strong>Dawn</strong> — The result is announced: either a player was found dead, or the Doctor saved them.</div></div>
+        <div class="rules-step"><span class="step-num">4</span><div><strong>Day discussion</strong> — All living players debate and accuse. The dead can only watch.</div></div>
+        <div class="rules-step"><span class="step-num">5</span><div><strong>Vote</strong> — Everyone votes to eliminate a suspect. Most votes wins. Ties mean no elimination.</div></div>
+        <div class="rules-step"><span class="step-num">6</span><div><strong>Reveal</strong> — The eliminated player's role is revealed to all. Then night falls again.</div></div>
+      </div>
+
+      <h3>🏆 Win Conditions</h3>
+      <div class="rules-wins">
+        <div class="rules-win-card"><span class="win-icon">🏘️</span><strong>Villagers win</strong> when the Killer is voted out.</div>
+        <div class="rules-win-card"><span class="win-icon">🔪</span><strong>Killer wins</strong> when only 2 players remain alive (a tied vote means the Killer kills again).</div>
+      </div>
+
+      <div class="rules-tip">💡 <strong>Tip:</strong> Use the <em>Hide Role</em> button if others might see your screen.</div>
+    </div>
+
+    <!-- Tic Tac Toe Rules -->
+    <div id="rules-tictactoe" class="rules-content">
+      <p class="rules-intro">The classic game of Xs and Os — now with score tracking and match formats.</p>
+
+      <h3>🎯 Objective</h3>
+      <p>Get three of your symbols in a row — horizontally, vertically, or diagonally — before your opponent does.</p>
+
+      <h3>🔄 How to Play</h3>
+      <div class="rules-steps">
+        <div class="rules-step"><span class="step-num">1</span><div>Two players are randomly assigned <strong class="x-col">✕ (X)</strong> and <strong class="o-col">○ (O)</strong>. Others watch as spectators.</div></div>
+        <div class="rules-step"><span class="step-num">2</span><div><strong>X always goes first.</strong> Take turns clicking empty cells on the 3×3 grid.</div></div>
+        <div class="rules-step"><span class="step-num">3</span><div>The first to place three in a row <strong>wins the game</strong>. Symbols swap for the next game.</div></div>
+        <div class="rules-step"><span class="step-num">4</span><div>If all 9 cells fill up with no winner, it's a <strong>draw</strong>.</div></div>
+      </div>
+
+      <h3>⚙️ Match Formats</h3>
+      <div class="rules-wins">
+        <div class="rules-win-card"><span class="win-icon">∞</span><strong>Free Play</strong> — play unlimited games, track score indefinitely.</div>
+        <div class="rules-win-card"><span class="win-icon">🏆</span><strong>Best of 3 / 5 / 7</strong> — first to win the majority claims the match.</div>
+      </div>
+      <div class="rules-tip">💡 <strong>Tip:</strong> The room host sets the match format in Settings before the game starts.</div>
+    </div>
+
+    <!-- Scribble Rules -->
+    <div id="rules-scribble" class="rules-content">
+      <p class="rules-intro">One player draws a secret word while everyone else races to guess it. The faster you guess, the more points you earn.</p>
+
+      <h3>🔄 How to Play</h3>
+      <div class="rules-steps">
+        <div class="rules-step"><span class="step-num">1</span><div>Each round, one player becomes the <strong>Drawer</strong>. They're shown 3 secret words and must choose one.</div></div>
+        <div class="rules-step"><span class="step-num">2</span><div>Everyone else sees only <strong>_ _ _ _ _</strong> (blanks) and must <strong>type their guess</strong> in the chat.</div></div>
+        <div class="rules-step"><span class="step-num">3</span><div>Correct guesses earn points based on <strong>how quickly</strong> you answered. Hints appear after 30s and 55s.</div></div>
+        <div class="rules-step"><span class="step-num">4</span><div>The <strong>Drawer earns points</strong> for each player who guesses correctly. Draw clearly!</div></div>
+        <div class="rules-step"><span class="step-num">5</span><div>The round ends when time runs out or everyone has guessed. Roles rotate — everyone gets a turn to draw.</div></div>
+        <div class="rules-step"><span class="step-num">6</span><div>After all rounds, the <strong>highest scorer wins</strong> the game.</div></div>
+      </div>
+
+      <h3>🎨 Drawing Tools</h3>
+      <div class="rules-tools-grid">
+        <div class="rules-tool"><span>✏️</span><div><strong>Pencil</strong> — free-draw. Adjust color and brush size.</div></div>
+        <div class="rules-tool"><span>🔲</span><div><strong>Eraser</strong> — erase parts of your drawing.</div></div>
+        <div class="rules-tool"><span>🪣</span><div><strong>Fill</strong> — flood-fill an area with your chosen color.</div></div>
+        <div class="rules-tool"><span>🗑️</span><div><strong>Clear</strong> — wipe the canvas and start over.</div></div>
+      </div>
+
+      <div class="rules-tip">💡 <strong>Tip:</strong> Once you guess correctly you can't chat — don't spoil it for others!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ GLOBAL OVERLAYS ══════════════════════ -->
+<div id="toast-container"></div>
+<div id="loading-overlay" class="hidden">
+  <div class="spinner"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/app.js"></script>
+<script src="js/tictactoe.js"></script>
+<script src="js/killerdoctor.js"></script>
+<script src="js/scribble.js"></script>
+</body>
+</html>
