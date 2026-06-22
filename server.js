@@ -68,6 +68,7 @@ function broadcastLobby(room) {
     hostId: room.host,
     minPlayers: minPlayers(room.gameType),
     settings: room.settings,
+    sessionStats: Object.keys(room.sessionStats || {}).length ? room.sessionStats : null,
   });
 }
 
@@ -96,6 +97,7 @@ io.on('connection', socket => {
       gameState: null,
       timers: [],
       settings: defaultSettings(gameType),
+      sessionStats: {},
     };
     rooms.set(code, room);
     playerRooms.set(socket.id, code);
@@ -139,6 +141,29 @@ io.on('connection', socket => {
     const validated = validateSettings(newSettings, room.gameType);
     room.settings = { ...room.settings, ...validated };
     io.to(room.code).emit('lobby:settings', room.settings);
+  });
+
+  socket.on('room:kick', ({ playerId }) => {
+    const room = getRoom(socket.id);
+    if (!room || room.host !== socket.id || room.status !== 'lobby') return;
+    if (!playerId || playerId === socket.id) return;
+    const player = room.players.get(playerId);
+    if (!player) return;
+    io.to(playerId).emit('room:kicked');
+    io.sockets.sockets.get(playerId)?.leave(room.code);
+    room.players.delete(playerId);
+    playerRooms.delete(playerId);
+    io.to(room.code).emit('notification', `${player.name} was removed by the host`);
+    broadcastLobby(room);
+  });
+
+  socket.on('room:transfer_host', ({ playerId }) => {
+    const room = getRoom(socket.id);
+    if (!room || room.host !== socket.id || room.status !== 'lobby') return;
+    if (!playerId || !room.players.has(playerId) || playerId === socket.id) return;
+    room.host = playerId;
+    io.to(room.code).emit('notification', `${room.players.get(playerId).name} is now the host`);
+    broadcastLobby(room);
   });
 
   socket.on('game:start', () => {
@@ -219,7 +244,7 @@ function sendReconnectState(room, socket) {
     }
     case 'killerdoctor': {
       const pd = gs.playerData?.[socket.id];
-      if (pd) socket.emit('kd:reconnect', { role: pd.role, phase: gs.phase, alive: pd.alive });
+      if (pd) socket.emit('kd:reconnect', { role: pd.role, phase: gs.phase, alive: pd.alive, avatar: pd.avatar ?? 0 });
       break;
     }
     case 'scribble':
@@ -324,6 +349,20 @@ function onPlayerDisconnect(room, sid, name) {
   }
 }
 
+// ─────────────────────── SESSION STATS ───────────────────────
+
+function recordResult(room, winnerIds, allIds) {
+  if (!room.sessionStats) room.sessionStats = {};
+  const ids = allIds || [...room.players.keys()];
+  ids.forEach(pid => {
+    const name = room.players.get(pid)?.name || room.sessionStats[pid]?.name || '?';
+    if (!room.sessionStats[pid]) room.sessionStats[pid] = { name, wins: 0, gamesPlayed: 0 };
+    else room.sessionStats[pid].name = name;
+    room.sessionStats[pid].gamesPlayed++;
+  });
+  winnerIds.forEach(pid => { if (room.sessionStats[pid]) room.sessionStats[pid].wins++; });
+}
+
 // ─────────────────────── TIC TAC TOE ───────────────────────
 
 function nextPow2(n) { let p = 1; while (p < n) p <<= 1; return p; }
@@ -369,6 +408,7 @@ function advanceTournament(room) {
   if (finalMatch.winner) {
     gs.tournamentWinner = finalMatch.winner;
     gs.board = null; gs.players = null; room.status = 'ended';
+    recordResult(room, [gs.tournamentWinner], Object.keys(gs.allPlayers));
     io.to(room.code).emit('ttt:tournament_over', {
       winner: gs.allPlayers[gs.tournamentWinner],
       rounds: gs.rounds, allPlayers: gs.allPlayers,
@@ -465,7 +505,10 @@ function tttMove(room, socket, index) {
       gs.scores[socket.id] = (gs.scores[socket.id] || 0) + 1;
       if (gs.bestOf > 0) {
         const needed = Math.ceil(gs.bestOf / 2);
-        if (gs.scores[socket.id] >= needed) gs.matchWinner = socket.id;
+        if (gs.scores[socket.id] >= needed) {
+          gs.matchWinner = socket.id;
+          recordResult(room, [socket.id]);
+        }
       }
       io.to(room.code).emit('ttt:state', tttPublic(gs));
     }
@@ -654,6 +697,12 @@ function kdCheckWin(gs) {
 
 function endKD(room, win) {
   const gs = room.gameState; gs.phase = 'game_over'; room.status = 'ended';
+  const allKdIds = Object.keys(gs.playerData);
+  const kdKiller = kdRole(gs, 'killer');
+  const winnerIds = win.winner === 'villagers'
+    ? allKdIds.filter(id => gs.playerData[id]?.role !== 'killer')
+    : [kdKiller?.id].filter(Boolean);
+  recordResult(room, winnerIds, allKdIds);
   io.to(room.code).emit('kd:game_over', {
     winner: win.winner, reason: win.reason,
     allPlayers: Object.values(gs.playerData).map(p => ({ ...kdPub(p), role: p.role, alive: p.alive })),
@@ -805,6 +854,7 @@ function advanceScribble(room) {
 function endScribbleGame(room) {
   const gs = room.gameState; gs.phase='game_over'; room.status='ended';
   const ranked = scribblePlayers(room).sort((a,b)=>(gs.scores[b.id]||0)-(gs.scores[a.id]||0));
+  if (ranked[0]) recordResult(room, [ranked[0].id]);
   io.to(room.code).emit('scribble:game_over', { scores:gs.scores, players:ranked, winner:ranked[0] });
 }
 

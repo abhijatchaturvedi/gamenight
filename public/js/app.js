@@ -255,17 +255,21 @@ function saveSettings() {
 
 // ═══════════════════ AVATAR PICKER ═══════════════════
 function initAvatarPicker() {
+  const saved = parseInt(localStorage.getItem('gn_avatar') || '0', 10);
+  App.myAvatar = (saved >= 0 && saved < AVATARS.length) ? saved : 0;
+
   const grid = document.getElementById('avatar-picker');
   AVATARS.forEach((av, i) => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'avatar-opt' + (i === 0 ? ' selected' : '');
+    btn.className = 'avatar-opt' + (i === App.myAvatar ? ' selected' : '');
     btn.textContent = av.emoji;
     btn.title = av.name;
     btn.addEventListener('click', () => {
       document.querySelectorAll('.avatar-opt').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       App.myAvatar = i;
+      localStorage.setItem('gn_avatar', i);
     });
     grid.appendChild(btn);
   });
@@ -273,6 +277,9 @@ function initAvatarPicker() {
 
 // ═══════════════════ HOME SCREEN ═══════════════════
 function initHome() {
+  const urlCode = new URLSearchParams(window.location.search).get('code');
+  if (urlCode) document.getElementById('inp-code').value = urlCode.toUpperCase();
+
   document.querySelectorAll('.game-card').forEach(card => {
     card.addEventListener('click', () => {
       document.querySelectorAll('.game-card').forEach(c => c.classList.remove('selected'));
@@ -315,7 +322,6 @@ function doJoin() {
 function initLobby() {
   document.getElementById('btn-copy').addEventListener('click', () => {
     navigator.clipboard?.writeText(App.roomCode).then(() => toast('Room code copied!')).catch(() => {
-      // Fallback for non-HTTPS
       const el = document.createElement('textarea');
       el.value = App.roomCode;
       document.body.appendChild(el);
@@ -323,11 +329,23 @@ function initLobby() {
       el.remove(); toast('Room code copied!');
     });
   });
+
+  document.getElementById('btn-share').addEventListener('click', () => {
+    const url = `${window.location.origin}${window.location.pathname}?code=${App.roomCode}`;
+    navigator.clipboard?.writeText(url).then(() => toast('Invite link copied!')).catch(() => {
+      const el = document.createElement('textarea');
+      el.value = url;
+      document.body.appendChild(el);
+      el.select(); document.execCommand('copy');
+      el.remove(); toast('Invite link copied!');
+    });
+  });
+
   document.getElementById('btn-leave').addEventListener('click', () => location.reload());
   document.getElementById('btn-start').addEventListener('click', () => App.socket.emit('game:start'));
 }
 
-function renderLobby({ players, code, gameType, hostId, minPlayers, settings }) {
+function renderLobby({ players, code, gameType, hostId, minPlayers, settings, sessionStats }) {
   App.roomCode = code;
   App.isHost = hostId === App.myId;
   App.currentSettings = settings || {};
@@ -351,6 +369,27 @@ function renderLobby({ players, code, gameType, hostId, minPlayers, settings }) 
     nameEl.textContent = p.name + (p.id === App.myId ? ' (You)' : '');
     card.appendChild(nameEl);
     if (p.isHost) { const cr = document.createElement('div'); cr.className = 'host-crown'; cr.textContent = '👑 Host'; card.appendChild(cr); }
+    if (App.isHost && p.id !== App.myId) {
+      const controls = document.createElement('div');
+      controls.className = 'host-controls';
+      const transferBtn = document.createElement('button');
+      transferBtn.className = 'btn-host-ctrl';
+      transferBtn.title = 'Make host';
+      transferBtn.textContent = '👑';
+      transferBtn.addEventListener('click', () => {
+        if (confirm(`Make ${p.name} the host?`)) App.socket.emit('room:transfer_host', { playerId: p.id });
+      });
+      const kickBtn = document.createElement('button');
+      kickBtn.className = 'btn-host-ctrl btn-kick-ctrl';
+      kickBtn.title = 'Kick player';
+      kickBtn.textContent = '🚫';
+      kickBtn.addEventListener('click', () => {
+        if (confirm(`Kick ${p.name}?`)) App.socket.emit('room:kick', { playerId: p.id });
+      });
+      controls.appendChild(transferBtn);
+      controls.appendChild(kickBtn);
+      card.appendChild(controls);
+    }
     grid.appendChild(card);
   });
 
@@ -364,6 +403,25 @@ function renderLobby({ players, code, gameType, hostId, minPlayers, settings }) 
   startBtn.textContent = App.isHost ? 'Start Game' : 'Waiting for host…';
 
   renderSettings(gameType, settings, App.isHost);
+  renderSessionStats(sessionStats);
+}
+
+function renderSessionStats(stats) {
+  const el = document.getElementById('lobby-session-stats');
+  if (!stats || !Object.keys(stats).length) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  const body = el.querySelector('.stats-body');
+  body.innerHTML = '';
+  const sorted = Object.values(stats).sort((a, b) => b.wins - a.wins || b.gamesPlayed - a.gamesPlayed);
+  const medals = ['🥇', '🥈', '🥉'];
+  sorted.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'stats-row';
+    row.innerHTML = `<span class="stats-rank">${medals[i] || (i + 1) + '.'}</span>` +
+      `<span class="stats-name">${s.name}</span>` +
+      `<span class="stats-record">${s.wins}W / ${s.gamesPlayed}G</span>`;
+    body.appendChild(row);
+  });
 }
 
 // ═══════════════════ SOCKET EVENTS ═══════════════════
@@ -397,6 +455,12 @@ App.socket.on('notification', msg => toast(msg));
 App.socket.on('game:starting', () => showCountdown());
 App.socket.on('game:back_to_lobby', () => showView('lobby'));
 
+App.socket.on('room:kicked', () => {
+  showView('home');
+  showLoading(false);
+  toast('You were removed from the room.', 4000, 'error');
+});
+
 // Game start triggers
 App.socket.on('kd:role_assigned', data  => { showView('killerdoctor'); KillerDoctor.onRoleAssigned(data); });
 App.socket.on('ttt:state',        data  => { showView('tictactoe');    TicTacToe.onState(data); });
@@ -405,7 +469,11 @@ App.socket.on('ttt:player_left',  data  =>   TicTacToe.onPlayerLeft(data));
 App.socket.on('ttt:tournament_state', data => { showView('tictactoe'); });  // handled inside TicTacToe module
 App.socket.on('scribble:game_start', data => { showView('scribble');  Scribble.onStart(data); });
 App.socket.on('scribble:reconnect',  data => { showView('scribble');  Scribble.onReconnect(data); });
-App.socket.on('kd:reconnect',    data  => { showView('killerdoctor'); KillerDoctor.onReconnect(data); });
+App.socket.on('kd:reconnect',    data  => {
+  if (data.avatar !== undefined) App.myAvatar = data.avatar;
+  showView('killerdoctor');
+  KillerDoctor.onReconnect(data);
+});
 
 // ═══════════════════ INIT ═══════════════════
 document.addEventListener('DOMContentLoaded', () => {

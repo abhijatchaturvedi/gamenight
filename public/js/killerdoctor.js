@@ -268,7 +268,8 @@ const KillerDoctor = (() => {
     card.classList.add('kd-card-flip');
   }
 
-  function onReconnect({ role, phase, alive }) {
+  function onReconnect({ role, phase, alive, avatar }) {
+    if (avatar !== undefined) App.myAvatar = avatar;
     setRole(role, alive);
     setPhase(phase === 'night' ? 'night' :
              phase === 'night_resolution' ? 'night-result' :

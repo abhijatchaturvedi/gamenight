@@ -68,6 +68,7 @@
           <span>Room Code:</span>
           <strong id="lobby-code" class="code-display"></strong>
           <button id="btn-copy" class="btn-icon" title="Copy code">⧉</button>
+          <button id="btn-share" class="btn-icon" title="Copy invite link">🔗</button>
         </div>
       </div>
       <div class="lobby-header-actions">
@@ -77,6 +78,12 @@
     </div>
 
     <div class="lobby-players-grid" id="lobby-players"></div>
+
+    <!-- Session scoreboard (visible after first game) -->
+    <div id="lobby-session-stats" class="session-stats hidden">
+      <div class="session-stats-header">Session Scoreboard</div>
+      <div class="stats-body"></div>
+    </div>
 
     <!-- Settings panel -->
     <div class="settings-panel" id="lobby-settings-panel">
