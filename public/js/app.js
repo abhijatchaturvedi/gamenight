@@ -15,6 +15,11 @@ const AVATARS = [
   { emoji: '🐸', name: 'Frog' },     { emoji: '🦩', name: 'Flamingo' },
   { emoji: '🐯', name: 'Tiger' },    { emoji: '🦀', name: 'Crab' },
   { emoji: '🦜', name: 'Parrot' },   { emoji: '🐳', name: 'Whale' },
+  { emoji: '🦈', name: 'Shark' },    { emoji: '🤖', name: 'Robot' },
+  { emoji: '🧞', name: 'Genie' },    { emoji: '🦸', name: 'Hero' },
+  { emoji: '🐊', name: 'Croc' },     { emoji: '🦉', name: 'Owl' },
+  { emoji: '🐬', name: 'Dolphin' },  { emoji: '🦦', name: 'Otter' },
+  { emoji: '🐘', name: 'Elephant' }, { emoji: '🐒', name: 'Monkey' },
 ];
 
 // ═══════════════════ GLOBAL STATE ═══════════════════
@@ -262,9 +267,11 @@ function initAvatarPicker() {
   AVATARS.forEach((av, i) => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'avatar-opt' + (i === App.myAvatar ? ' selected' : '');
+    btn.className = 'avatar-opt' + (i === App.myAvatar ? ' selected' : ' avatar-opt-enter');
+    btn.style.animationDelay = `${i * 0.018}s`;
     btn.textContent = av.emoji;
     btn.title = av.name;
+    btn.addEventListener('animationend', () => btn.classList.remove('avatar-opt-enter'));
     btn.addEventListener('click', () => {
       document.querySelectorAll('.avatar-opt').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');

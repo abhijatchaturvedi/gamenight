@@ -95,16 +95,70 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .form-row { margin-bottom: 14px; }
 .avatar-section { margin: 0 0 16px; }
 .avatar-section-label { font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
-.avatar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; max-height: 192px; overflow-y: auto; }
-.avatar-opt { background: var(--card); border: 2px solid var(--border); border-radius: 8px; font-size: 1.2rem; padding: 5px; cursor: pointer; transition: border-color .12s, transform .12s, background .12s; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
-.avatar-opt:hover { border-color: var(--accent); transform: scale(1.12); }
-.avatar-opt.selected { border-color: var(--accent); background: rgba(124,58,237,.18); box-shadow: 0 0 0 2px rgba(124,58,237,.35); }
-.row-inline { display: flex; gap: 10px; }
-.row-inline input { flex: 1; }
+.avatar-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+  max-height: 192px; overflow-y: auto; padding-right: 4px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.avatar-grid::-webkit-scrollbar { width: 5px; }
+.avatar-grid::-webkit-scrollbar-track { background: transparent; }
+.avatar-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+.avatar-grid::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-#btn-create { width: 100%; margin-bottom: 4px; }
-.join-divider { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 0.82rem; margin: 12px 0; }
-.join-divider::before, .join-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.avatar-opt {
+  background: var(--card); border: 2px solid var(--border); border-radius: 8px;
+  font-size: 1.2rem; padding: 5px; cursor: pointer; aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .15s, background .15s, box-shadow .15s,
+              transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative; z-index: 0;
+}
+.avatar-opt:not(.selected):hover {
+  border-color: var(--accent2); background: rgba(14,165,233,.12);
+  transform: scale(1.3) rotate(-8deg); z-index: 2;
+}
+.avatar-opt.selected {
+  border-color: var(--accent); background: rgba(124,58,237,.2);
+  animation: avatarGlow 2s ease-in-out infinite;
+}
+.avatar-opt.selected:hover { animation: none; transform: scale(1.3) rotate(-8deg); }
+
+@keyframes avatarGlow {
+  0%,100% { box-shadow: 0 0 0 2px var(--accent), 0 0 8px rgba(124,58,237,.4); transform: scale(1.1); }
+  50%      { box-shadow: 0 0 0 3px var(--accent), 0 0 16px rgba(124,58,237,.6); transform: scale(1.14); }
+}
+@keyframes avatarEnter {
+  from { opacity: 0; transform: scale(0.4) rotate(-20deg); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.avatar-opt-enter { animation: avatarEnter 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+.row-inline { display: flex; gap: 10px; }
+.row-inline input { flex: 1; min-width: 0; }
+
+/* ─── Home action cards ─── */
+.home-actions { display: flex; flex-direction: column; gap: 0; margin: 14px 0 10px; }
+.home-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; transition: border-color .15s;
+}
+.home-card:hover { border-color: rgba(124,58,237,.4); }
+.home-card-icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+.home-card-text { flex: 1; min-width: 0; }
+.home-card-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 1px; }
+.home-card-sub { font-size: 0.78rem; color: var(--muted); }
+.home-card > .btn-primary { flex-shrink: 0; }
+.home-or {
+  text-align: center; color: var(--muted); font-size: 0.8rem; font-weight: 500;
+  padding: 6px 0; position: relative;
+}
+.home-or::before, .home-or::after {
+  content: ''; position: absolute; top: 50%; width: 35%; height: 1px;
+  background: var(--border);
+}
+.home-or::before { left: 0; }
+.home-or::after { right: 0; }
 
 .error-msg { color: var(--red); font-size: 0.875rem; margin-top: 10px; }
 

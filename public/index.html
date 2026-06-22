@@ -47,13 +47,29 @@
       <div class="avatar-section-label">Pick your avatar</div>
       <div class="avatar-grid" id="avatar-picker"></div>
     </div>
-    <button id="btn-rules-home" class="btn-rules-link">📖 How to Play</button>
-    <button id="btn-create" class="btn-primary btn-lg">Create Room</button>
-    <div class="join-divider"><span>or join with a code</span></div>
-    <div class="form-row row-inline">
-      <input id="inp-code" type="text" placeholder="Room code" maxlength="6" autocomplete="off" style="text-transform:uppercase">
-      <button id="btn-join" class="btn-primary">Join</button>
+    <div class="home-actions">
+      <div class="home-card">
+        <span class="home-card-icon">🎮</span>
+        <div class="home-card-text">
+          <div class="home-card-title">Create a Room</div>
+          <div class="home-card-sub">Host a new game for your friends</div>
+        </div>
+        <button id="btn-create" class="btn-primary btn-sm">Create</button>
+      </div>
+      <div class="home-or">or</div>
+      <div class="home-card">
+        <span class="home-card-icon">🚪</span>
+        <div class="home-card-text">
+          <div class="home-card-title">Join a Room</div>
+          <div class="row-inline" style="margin-top:6px">
+            <input id="inp-code" type="text" placeholder="Room code" maxlength="6" autocomplete="off" style="text-transform:uppercase">
+            <button id="btn-join" class="btn-primary btn-sm">Join</button>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <button id="btn-rules-home" class="btn-rules-link">📖 How to Play</button>
     <div id="home-error" class="error-msg hidden"></div>
   </div>
 </div>
