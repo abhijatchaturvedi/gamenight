@@ -65,12 +65,37 @@ function showLoading(on) {
   document.getElementById('loading-overlay').classList.toggle('hidden', !on);
 }
 
-function toast(msg, duration = 3000) {
+function toast(msg, duration = 3000, type = '') {
   const el = document.createElement('div');
-  el.className = 'toast';
+  el.className = 'toast' + (type ? ` toast-${type}` : '');
   el.textContent = msg;
   document.getElementById('toast-container').appendChild(el);
   setTimeout(() => el.remove(), duration);
+}
+
+function showCountdown() {
+  document.getElementById('game-countdown')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'game-countdown';
+  overlay.className = 'countdown-overlay';
+  document.body.appendChild(overlay);
+  const steps = ['3','2','1','GO!'];
+  let i = 0;
+  function step() {
+    overlay.innerHTML = '';
+    const el = document.createElement('div');
+    el.className = 'countdown-num' + (steps[i] === 'GO!' ? ' go' : '');
+    el.textContent = steps[i];
+    overlay.appendChild(el);
+    i++;
+    if (i < steps.length) setTimeout(step, 800);
+    else setTimeout(() => {
+      overlay.style.transition = 'opacity 0.3s ease';
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.remove(), 300);
+    }, 600);
+  }
+  step();
 }
 
 function showError(elId, msg) {
@@ -313,9 +338,10 @@ function renderLobby({ players, code, gameType, hostId, minPlayers, settings }) 
 
   const grid = document.getElementById('lobby-players');
   grid.innerHTML = '';
-  players.forEach(p => {
+  players.forEach((p, idx) => {
     const card = document.createElement('div');
-    card.className = 'lobby-player-card' + (p.isHost ? ' is-host' : '');
+    card.className = 'lobby-player-card' + (p.isHost ? ' is-host' : '') + ' lobby-card-enter';
+    card.style.animationDelay = `${idx * 0.07}s`;
     const av = document.createElement('div');
     av.className = 'lobby-player-emoji';
     av.textContent = AVATARS[p.avatar ?? 0].emoji;
@@ -368,7 +394,7 @@ App.socket.on('lobby:settings', settings => {
 });
 
 App.socket.on('notification', msg => toast(msg));
-App.socket.on('game:restarting', () => toast('New game starting…'));
+App.socket.on('game:starting', () => showCountdown());
 App.socket.on('game:back_to_lobby', () => showView('lobby'));
 
 // Game start triggers

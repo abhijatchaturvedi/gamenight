@@ -263,6 +263,7 @@ const Scribble = (() => {
       const m = Math.floor(rem/60), s = rem%60;
       el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
       el.classList.toggle('danger', rem <= 15);
+      canvas.classList.toggle('scb-canvas-urgent', rem <= 10 && isDrawer);
       rem--;
       if (rem < 0) clearInterval(timerInterval);
     }
@@ -408,13 +409,31 @@ const Scribble = (() => {
     }
   }
 
+  function showGuessBurst() {
+    const el = document.getElementById('scb-overlay-guessed');
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+    ['🎉','🎊','⭐','✨','🌟','🎈'].forEach((em, i) => {
+      const span = document.createElement('span');
+      span.className = 'scb-burst-particle';
+      const angle = (i / 6) * Math.PI * 2;
+      span.textContent = em;
+      span.style.cssText = `left:${cx}px;top:${cy}px;--dx:${(Math.cos(angle)*80).toFixed(0)}px;--dy:${(Math.sin(angle)*80).toFixed(0)}px`;
+      document.body.appendChild(span);
+      setTimeout(() => span.remove(), 950);
+    });
+  }
+
   function onCorrectGuess({ word, points }) {
     hasGuessed = true;
     document.getElementById('scb-chat-input').disabled = true;
-    document.getElementById('scb-overlay-guessed').textContent = `🎉 Correct! +${points} points`;
-    document.getElementById('scb-overlay-guessed').classList.remove('hidden');
-    setTimeout(() => document.getElementById('scb-overlay-guessed').classList.add('hidden'), 3000);
-    // Show word to guesser
+    const el = document.getElementById('scb-overlay-guessed');
+    el.textContent = `🎉 Correct! +${points} points`;
+    el.classList.remove('hidden', 'scb-guess-pop');
+    void el.offsetWidth;
+    el.classList.add('scb-guess-pop');
+    showGuessBurst();
+    setTimeout(() => el.classList.add('hidden'), 3000);
     setWordDisplay(word);
   }
 
@@ -422,8 +441,17 @@ const Scribble = (() => {
     clearInterval(timerInterval);
     setDrawerMode(false);
     renderPlayers(players, null);
+    canvas.classList.remove('scb-canvas-urgent');
     const overlay = document.getElementById('scb-overlay-round-end');
-    overlay.querySelector('strong').textContent = word || '—';
+    const wordEl = overlay.querySelector('strong');
+    wordEl.textContent = '';
+    (word || '—').split('').forEach((ch, i) => {
+      const span = document.createElement('span');
+      span.className = 'scb-letter-flip';
+      span.style.animationDelay = `${i * 0.07}s`;
+      span.textContent = ch;
+      wordEl.appendChild(span);
+    });
     const scoreList = document.getElementById('scb-overlay-scores');
     scoreList.innerHTML = '';
     const sorted = [...players].sort((a,b) => (scores[b.id]||0) - (scores[a.id]||0));

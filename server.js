@@ -149,7 +149,8 @@ io.on('connection', socket => {
       return;
     }
     room.status = 'playing';
-    ({ tictactoe: startTTT, killerdoctor: startKD, scribble: startScribble })[room.gameType]?.(room);
+    io.to(room.code).emit('game:starting');
+    addTimer(room, () => ({ tictactoe: startTTT, killerdoctor: startKD, scribble: startScribble })[room.gameType]?.(room), 3200);
   });
 
   socket.on('game:action', data => {
@@ -235,8 +236,8 @@ function restartGame(room) {
   clearTimers(room);
   room.status = 'playing';
   room.gameState = null;
-  io.to(room.code).emit('game:restarting');
-  addTimer(room, () => ({ tictactoe: startTTT, killerdoctor: startKD, scribble: startScribble })[room.gameType]?.(room), 1500);
+  io.to(room.code).emit('game:starting');
+  addTimer(room, () => ({ tictactoe: startTTT, killerdoctor: startKD, scribble: startScribble })[room.gameType]?.(room), 3200);
 }
 
 function handleAction(room, socket, data) {

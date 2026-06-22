@@ -363,6 +363,154 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 }
 .kd-tension { border-radius: 10px; animation: kdTensionPulse 1.8s ease-in-out infinite; }
 
+/* Timer urgency shake */
+@keyframes kdTimerShake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-3px); }
+  40%      { transform: translateX(3px); }
+  60%      { transform: translateX(-2px); }
+  80%      { transform: translateX(2px); }
+}
+.timer-display.danger { color: var(--red); animation: kdTimerShake 0.35s ease-in-out infinite; }
+
+/* KD phase slide-in */
+@keyframes kdPhaseIn {
+  from { opacity: 0; transform: translateX(22px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.kd-phase.active { animation: kdPhaseIn 0.3s ease both; }
+
+/* Ambient night stars */
+@keyframes kdAmbientDrift {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 0.55; }
+  90%  { opacity: 0.35; }
+  100% { transform: translateY(-105vh) rotate(360deg); opacity: 0; }
+}
+.kd-ambient-star {
+  position: absolute; bottom: -10px; font-size: 0.75rem; pointer-events: none;
+  z-index: 0; animation: kdAmbientDrift linear forwards; user-select: none;
+}
+
+/* Action confirmation burst */
+@keyframes kdBurstOut {
+  0%   { transform: translate(-50%,-50%) translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(-50%,-50%) translate(var(--dx),var(--dy)) scale(0.4); opacity: 0; }
+}
+.kd-action-burst-particle {
+  position: fixed; font-size: 1.3rem; pointer-events: none; z-index: 9999;
+  animation: kdBurstOut 0.8s ease-out forwards;
+}
+
+/* Vote reveal stagger */
+@keyframes kdVoteReveal {
+  from { opacity: 0; transform: translateX(-16px) scale(0.92); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+.vote-reveal-stagger { opacity: 0; animation: kdVoteReveal 0.38s ease both; }
+
+/* Killer spotlight */
+@keyframes kdSpotlight {
+  0%,100% { box-shadow: 0 0 0  0   rgba(239,68,68,0);   border-color: var(--border); }
+  50%      { box-shadow: 0 0 28px 8px rgba(239,68,68,0.55); border-color: #ef4444; }
+}
+.kd-killer-spotlight { animation: kdSpotlight 1.2s ease-in-out 4; }
+
+/* ═══ Tic Tac Toe animations ═══ */
+@keyframes tttCellPop {
+  0%   { transform: scale(0) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(1.22) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.ttt-cell-pop { animation: tttCellPop 0.28s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+@keyframes tttWinGlow {
+  0%,100% { box-shadow: 0 0 0  0   rgba(124,58,237,0.3); transform: scale(1); }
+  50%      { box-shadow: 0 0 18px 6px rgba(124,58,237,0.55); transform: scale(1.07); }
+}
+.ttt-cell.win-cell { animation: tttWinGlow 0.75s ease-in-out infinite; }
+
+@keyframes tttBoardShake {
+  0%,100% { transform: translateX(0); }
+  15%     { transform: translateX(-7px); }
+  30%     { transform: translateX(7px); }
+  45%     { transform: translateX(-5px); }
+  60%     { transform: translateX(5px); }
+  75%     { transform: translateX(-3px); }
+  90%     { transform: translateX(3px); }
+}
+.ttt-shake { animation: tttBoardShake 0.5s ease both; }
+
+@keyframes bracketSlideIn {
+  from { opacity: 0; transform: translateX(35px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.bracket-round-slide { animation: bracketSlideIn 0.38s ease both; }
+
+/* ═══ Scribble animations ═══ */
+@keyframes scbGuessPop {
+  0%   { transform: scale(0.5) translateY(10px); opacity: 0; }
+  60%  { transform: scale(1.12) translateY(-4px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.scb-guess-pop { animation: scbGuessPop 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+@keyframes scbBurstOut {
+  0%   { transform: translate(-50%,-50%) translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(-50%,-50%) translate(var(--dx),var(--dy)) scale(0.3); opacity: 0; }
+}
+.scb-burst-particle {
+  position: fixed; font-size: 1.4rem; pointer-events: none; z-index: 9999;
+  animation: scbBurstOut 0.9s ease-out forwards;
+}
+
+@keyframes scbLetterFlip {
+  0%   { opacity: 0; transform: rotateX(-90deg) translateY(8px); }
+  60%  { opacity: 1; transform: rotateX(8deg)   translateY(-2px); }
+  100% { opacity: 1; transform: rotateX(0deg)   translateY(0); }
+}
+.scb-letter-flip {
+  display: inline-block; animation: scbLetterFlip 0.35s ease both;
+  transform-origin: bottom center;
+}
+
+@keyframes scbCanvasUrgent {
+  0%,100% { box-shadow: 0 0 0  0   rgba(239,68,68,0); }
+  50%      { box-shadow: 0 0 0 4px rgba(239,68,68,0.7); }
+}
+.scb-canvas-urgent { animation: scbCanvasUrgent 0.6s ease-in-out infinite; border-radius: 4px; }
+
+/* ═══ Game countdown overlay ═══ */
+.countdown-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+}
+@keyframes countdownPop {
+  0%   { transform: scale(0.4) rotate(-6deg); opacity: 0; }
+  50%  { transform: scale(1.15) rotate(2deg); opacity: 1; }
+  80%  { transform: scale(0.95) rotate(0deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.countdown-num {
+  font-size: 9rem; font-weight: 900; color: #fff; line-height: 1;
+  text-shadow: 0 4px 32px rgba(0,0,0,0.8);
+  animation: countdownPop 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.countdown-num.go { font-size: 6rem; color: var(--accent2); }
+
+/* ═══ Lobby card entrance ═══ */
+@keyframes lobbyCardEnter {
+  from { opacity: 0; transform: scale(0.82) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.lobby-card-enter { animation: lobbyCardEnter 0.28s ease both; }
+
+/* ═══ Toast types ═══ */
+.toast-warning { background: #92400e; border-left: 3px solid var(--yellow); }
+.toast-success { background: #065f46; border-left: 3px solid #10b981; }
+.toast-error   { background: #7f1d1d; border-left: 3px solid var(--red); }
+
 .day-layout { padding: 24px; max-width: 700px; margin: 0 auto; width: 100%; flex: 1; display: flex; flex-direction: column; gap: 16px; }
 .day-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
 .timer-badge { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; text-align: center; min-width: 80px; }

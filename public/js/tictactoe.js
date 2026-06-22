@@ -2,6 +2,7 @@ const TicTacToe = (() => {
   let mySymbol = null;
   let state = null;
   let isTournament = false;
+  let prevBoard = Array(9).fill(null);
 
   function init() {
     document.querySelectorAll('.ttt-cell').forEach(cell => {
@@ -105,7 +106,8 @@ const TicTacToe = (() => {
     bracket.innerHTML = '';
     rounds.forEach((matches, ri) => {
       const col = document.createElement('div');
-      col.className = 'bracket-round';
+      col.className = 'bracket-round bracket-round-slide';
+      col.style.animationDelay = `${ri * 0.12}s`;
       const label = document.createElement('div');
       label.className = 'bracket-round-label';
       label.textContent = getTournamentRoundLabel(ri, rounds.length);
@@ -148,10 +150,17 @@ const TicTacToe = (() => {
     document.getElementById('ttt-board').style.opacity = '1';
     cells.forEach((cell, i) => {
       const val = state.board[i];
+      const isNew = val && !prevBoard[i];
       cell.textContent = val === 'X' ? '✕' : val === 'O' ? '○' : '';
       cell.className = 'ttt-cell' + (val ? ' taken' : '') + (val === 'X' ? ' x-cell' : val === 'O' ? ' o-cell' : '');
       if (state.winLine?.includes(i)) cell.classList.add('win-cell');
+      if (isNew) {
+        cell.classList.remove('ttt-cell-pop');
+        void cell.offsetWidth;
+        cell.classList.add('ttt-cell-pop');
+      }
     });
+    prevBoard = [...(state.board || Array(9).fill(null))];
   }
 
   function renderScores() {
@@ -237,6 +246,8 @@ const TicTacToe = (() => {
       let msg;
       if (state.winner === 'draw') {
         msg = "It's a draw! 🤝";
+        const board = document.getElementById('ttt-board');
+        board.classList.remove('ttt-shake'); void board.offsetWidth; board.classList.add('ttt-shake');
       } else {
         const winnerPlayer = state.players[state.winnerSymbol];
         msg = winnerPlayer.id === App.myId ? 'You win! 🎉' : `${winnerPlayer.name} wins!`;

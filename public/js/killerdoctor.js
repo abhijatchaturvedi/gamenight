@@ -3,6 +3,7 @@ const KillerDoctor = (() => {
   let roleVisible = true;
   let timerInterval = null;
   let tensionShown = false;
+  let ambientInterval = null;
 
   const ROLE_INFO = {
     killer:   { icon: '🔪', color: '#ef4444', desc: 'Kill one player each night. Stay hidden.' },
@@ -107,7 +108,7 @@ const KillerDoctor = (() => {
     list.classList.toggle('kd-tension', aliveCount === 3);
     if (aliveCount === 3 && !tensionShown && myRole !== null) {
       tensionShown = true;
-      toast('⚠️ Final 3 players — Killer can now win!');
+      toast('⚠️ Final 3 players — Killer can now win!', 4000, 'warning');
     }
     const all = [...(living || []).map(p => ({...p, alive: true})), ...(dead || []).map(p => ({...p, alive: false}))];
     all.forEach(p => {
@@ -201,6 +202,47 @@ const KillerDoctor = (() => {
     }, cfg.dur || 2400);
   }
 
+  function startAmbient() {
+    stopAmbient();
+    const view = document.getElementById('view-killerdoctor');
+    ambientInterval = setInterval(() => {
+      const s = document.createElement('span');
+      s.className = 'kd-ambient-star';
+      s.textContent = ['⭐','✨','💫','🌟'][Math.floor(Math.random() * 4)];
+      s.style.cssText = `left:${(Math.random()*95).toFixed(1)}%;animation-duration:${(5+Math.random()*4).toFixed(1)}s`;
+      view.appendChild(s);
+      setTimeout(() => s.remove(), 10000);
+    }, 700);
+  }
+
+  function stopAmbient() {
+    clearInterval(ambientInterval);
+    ambientInterval = null;
+    document.querySelectorAll('.kd-ambient-star').forEach(s => s.remove());
+  }
+
+  function showActionBurst(elId, emojis) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    for (let i = 0; i < 6; i++) {
+      const span = document.createElement('span');
+      span.className = 'kd-action-burst-particle';
+      span.textContent = emojis[i % emojis.length];
+      const angle = (i / 6) * Math.PI * 2;
+      const dist = 50 + Math.random() * 25;
+      span.style.cssText = [
+        `left:${cx}px`, `top:${cy}px`,
+        `--dx:${(Math.cos(angle)*dist).toFixed(0)}px`,
+        `--dy:${(Math.sin(angle)*dist).toFixed(0)}px`,
+      ].join(';');
+      document.body.appendChild(span);
+      setTimeout(() => span.remove(), 850);
+    }
+  }
+
   function showVoteDropAnim(btn) {
     const rect = btn.getBoundingClientRect();
     const el = document.createElement('span');
@@ -246,6 +288,7 @@ const KillerDoctor = (() => {
     setPhase('night');
     startTimer('kd-night-timer', 45);
     showNightAnimation('night');
+    startAmbient();
   }
 
   function makeTargetBtn(t, onClick) {
@@ -300,12 +343,15 @@ const KillerDoctor = (() => {
   }
 
   function onActionConfirmed({ action }) {
-    document.getElementById('kd-action-done').textContent = action === 'night_kill' ? '✓ Target selected' : '✓ Save submitted';
+    const isKill = action === 'night_kill';
+    document.getElementById('kd-action-done').textContent = isKill ? '✓ Target selected' : '✓ Save submitted';
     document.getElementById('kd-action-done').classList.remove('hidden');
     document.querySelectorAll('#kd-action-targets .target-btn').forEach(b => b.disabled = true);
+    showActionBurst('kd-action-done', isKill ? ['🔪','💀','🩸'] : ['💉','💚','✨']);
   }
 
   function onNightResult({ message, died, saved, livingPlayers, deadPlayers }) {
+    stopAmbient();
     renderPlayerList(livingPlayers, deadPlayers);
     if (died) {
       addHistory(`${died.name} died in the night.`);
@@ -414,9 +460,10 @@ const KillerDoctor = (() => {
 
     const detail = document.getElementById('kd-vote-detail');
     detail.innerHTML = '';
-    (voteDetails || []).sort((a,b) => b.votes - a.votes).forEach(v => {
+    (voteDetails || []).sort((a,b) => b.votes - a.votes).forEach((v, idx) => {
       const d = document.createElement('div');
-      d.className = 'vote-detail-item';
+      d.className = 'vote-detail-item vote-reveal-stagger';
+      d.style.animationDelay = `${idx * 0.35}s`;
       d.innerHTML = `${getAvatar(v).emoji} ${v.name}: <span class="vote-count">${v.votes} vote${v.votes !== 1 ? 's' : ''}</span>`;
       detail.appendChild(d);
     });
@@ -436,6 +483,11 @@ const KillerDoctor = (() => {
     document.getElementById('kd-btn-again').style.display = App.isHost ? 'inline-block' : 'none';
     setPhase('gameover');
     showNightAnimation(isVillagers ? 'villagers_win' : 'killer_wins');
+    setTimeout(() => {
+      document.querySelectorAll('.final-player-card').forEach(card => {
+        if (card.querySelector('.fp-role.killer')) card.classList.add('kd-killer-spotlight');
+      });
+    }, 3900);
 
     const grid = document.getElementById('kd-final-players');
     grid.innerHTML = '';
