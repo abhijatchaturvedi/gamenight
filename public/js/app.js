@@ -318,27 +318,35 @@ function doJoin() {
   App.socket.emit('room:join', { code, playerName: name, avatar: App.myAvatar });
 }
 
+// ═══════════════════ CLIPBOARD ═══════════════════
+function copyText(text, msg) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => toast(msg)).catch(() => fallbackCopy(text, msg));
+  } else {
+    fallbackCopy(text, msg);
+  }
+}
+
+function fallbackCopy(text, msg) {
+  const el = document.createElement('textarea');
+  el.value = text;
+  el.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+  document.body.appendChild(el);
+  el.focus(); el.select();
+  try { document.execCommand('copy'); toast(msg); }
+  catch { toast('Copy failed — code: ' + text, 4000, 'error'); }
+  el.remove();
+}
+
 // ═══════════════════ LOBBY ═══════════════════
 function initLobby() {
   document.getElementById('btn-copy').addEventListener('click', () => {
-    navigator.clipboard?.writeText(App.roomCode).then(() => toast('Room code copied!')).catch(() => {
-      const el = document.createElement('textarea');
-      el.value = App.roomCode;
-      document.body.appendChild(el);
-      el.select(); document.execCommand('copy');
-      el.remove(); toast('Room code copied!');
-    });
+    copyText(App.roomCode, 'Room code copied!');
   });
 
   document.getElementById('btn-share').addEventListener('click', () => {
     const url = `${window.location.origin}${window.location.pathname}?code=${App.roomCode}`;
-    navigator.clipboard?.writeText(url).then(() => toast('Invite link copied!')).catch(() => {
-      const el = document.createElement('textarea');
-      el.value = url;
-      document.body.appendChild(el);
-      el.select(); document.execCommand('copy');
-      el.remove(); toast('Invite link copied!');
-    });
+    copyText(url, 'Invite link copied!');
   });
 
   document.getElementById('btn-leave').addEventListener('click', () => location.reload());
