@@ -20,6 +20,7 @@ const AVATARS = [
   { emoji: '🐊', name: 'Croc' },     { emoji: '🦉', name: 'Owl' },
   { emoji: '🐬', name: 'Dolphin' },  { emoji: '🦦', name: 'Otter' },
   { emoji: '🐘', name: 'Elephant' }, { emoji: '🐒', name: 'Monkey' },
+  { emoji: '🦒', name: 'Giraffe' },
 ];
 
 // ═══════════════════ GLOBAL STATE ═══════════════════
@@ -290,6 +291,31 @@ function saveSettings() {
 }
 
 // ═══════════════════ AVATAR PICKER ═══════════════════
+const NAME_AVATARS = {
+  'abhijat': 11,   // 🧛 Vampire
+  'vikas': 6,      // 🦊 Fox
+  'pranav': 40,    // 🦒 Giraffe
+  'devaansh': 39,  // 🐒 Monkey
+  'harshit': 37,   // 🦦 Otter
+  'deepak': 7,     // 🐺 Wolf
+  'abhishek': 24,  // 🐸 Frog
+  'piyush': 26,    // 🐯 Tiger
+  'arnav': 8,      // 🦅 Eagle
+  'suryansh': 16,  // 🐉 Dragon
+  'garima': 19,    // 🦄 Unicorn
+  'priyanshi': 21, // 🦝 Raccoon
+};
+
+function selectAvatar(idx) {
+  App.myAvatar = idx;
+  localStorage.setItem('gn_avatar', idx);
+  document.querySelectorAll('.avatar-opt').forEach((btn, i) => {
+    btn.classList.toggle('selected', i === idx);
+    btn.classList.remove('avatar-opt-enter');
+  });
+  document.querySelectorAll('.avatar-opt')[idx]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
 function initAvatarPicker() {
   const saved = parseInt(localStorage.getItem('gn_avatar') || '0', 10);
   App.myAvatar = (saved >= 0 && saved < AVATARS.length) ? saved : 0;
@@ -303,12 +329,7 @@ function initAvatarPicker() {
     btn.textContent = av.emoji;
     btn.title = av.name;
     btn.addEventListener('animationend', () => btn.classList.remove('avatar-opt-enter'));
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.avatar-opt').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      App.myAvatar = i;
-      localStorage.setItem('gn_avatar', i);
-    });
+    btn.addEventListener('click', () => selectAvatar(i));
     grid.appendChild(btn);
   });
 }
@@ -317,6 +338,11 @@ function initAvatarPicker() {
 function initHome() {
   const urlCode = new URLSearchParams(window.location.search).get('code');
   if (urlCode) document.getElementById('inp-code').value = urlCode.toUpperCase();
+
+  document.getElementById('inp-name').addEventListener('input', () => {
+    const key = document.getElementById('inp-name').value.trim().toLowerCase();
+    if (NAME_AVATARS[key] !== undefined) selectAvatar(NAME_AVATARS[key]);
+  });
 
   document.querySelectorAll('.game-card').forEach(card => {
     card.addEventListener('click', () => {
