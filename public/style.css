@@ -372,6 +372,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
   80%      { transform: translateX(2px); }
 }
 .timer-display.danger { color: var(--red); animation: kdTimerShake 0.35s ease-in-out infinite; }
+.countdown.danger { animation: blink 0.5s step-end infinite, kdTimerShake 0.35s ease-in-out infinite; }
 
 /* KD phase slide-in */
 @keyframes kdPhaseIn {

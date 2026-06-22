@@ -255,6 +255,7 @@ const KillerDoctor = (() => {
 
   function onRoleAssigned({ role, allPlayers }) {
     tensionShown = false;
+    stopAmbient();
     setRole(role);
     renderPlayerList(allPlayers, []);
     setPhase('reveal');
@@ -475,6 +476,7 @@ const KillerDoctor = (() => {
   }
 
   function onGameOver({ winner, reason, allPlayers, history }) {
+    stopAmbient();
     const isVillagers = winner === 'villagers';
     document.getElementById('kd-win-icon').textContent = isVillagers ? '🏘️' : '🔪';
     document.getElementById('kd-win-title').textContent = isVillagers ? 'Villagers Win!' : 'Killer Wins!';

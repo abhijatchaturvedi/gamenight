@@ -351,6 +351,7 @@ const Scribble = (() => {
   function onTurnStart({ drawerId, drawerName, round, maxRounds, scores, players }) {
     myDrawerId = drawerId;
     hasGuessed = false;
+    canvas.classList.remove('scb-canvas-urgent');
     clearCanvas(false);
     document.getElementById('scb-chat-messages').innerHTML = '';
     document.getElementById('scb-overlay-round-end').classList.add('hidden');
