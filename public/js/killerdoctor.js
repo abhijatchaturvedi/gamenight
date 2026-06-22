@@ -204,13 +204,12 @@ const KillerDoctor = (() => {
 
   function startAmbient() {
     stopAmbient();
-    const view = document.getElementById('view-killerdoctor');
     ambientInterval = setInterval(() => {
       const s = document.createElement('span');
       s.className = 'kd-ambient-star';
       s.textContent = ['⭐','✨','💫','🌟'][Math.floor(Math.random() * 4)];
       s.style.cssText = `left:${(Math.random()*95).toFixed(1)}%;animation-duration:${(5+Math.random()*4).toFixed(1)}s`;
-      view.appendChild(s);
+      document.body.appendChild(s);
       setTimeout(() => s.remove(), 10000);
     }, 700);
   }

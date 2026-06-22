@@ -388,8 +388,8 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
   100% { transform: translateY(-105vh) rotate(360deg); opacity: 0; }
 }
 .kd-ambient-star {
-  position: absolute; bottom: -10px; font-size: 0.75rem; pointer-events: none;
-  z-index: 0; animation: kdAmbientDrift linear forwards; user-select: none;
+  position: fixed; bottom: -10px; font-size: 0.75rem; pointer-events: none;
+  z-index: 1; animation: kdAmbientDrift linear forwards; user-select: none;
 }
 
 /* Action confirmation burst */
