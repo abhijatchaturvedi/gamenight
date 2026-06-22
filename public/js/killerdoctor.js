@@ -25,7 +25,7 @@ const KillerDoctor = (() => {
     document.getElementById('kd-btn-again').addEventListener('click', () => App.socket.emit('game:restart'));
     document.getElementById('kd-btn-lobby').addEventListener('click', () => App.socket.emit('game:back_to_lobby'));
     document.getElementById('kd-btn-exit').addEventListener('click', () => {
-      if (confirm('Exit the game? You will leave the room.')) location.reload();
+      showConfirm('Exit the game? You will leave the room.', () => location.reload(), { confirmText: 'Exit', danger: true });
     });
 
     App.socket.on('kd:night_start', onNightStart);

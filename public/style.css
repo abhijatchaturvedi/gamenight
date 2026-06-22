@@ -799,6 +799,31 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .stats-name { flex: 1; font-weight: 500; }
 .stats-record { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
 
+/* ═══════════════════ CONFIRM MODAL ═══════════════════ */
+.confirm-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  animation: confirmFadeIn 0.15s ease;
+}
+@keyframes confirmFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.confirm-box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 26px 28px;
+  min-width: 280px; max-width: 360px; width: 90%;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  animation: confirmPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes confirmPop {
+  from { transform: scale(0.82); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+.confirm-msg { font-size: 1rem; line-height: 1.55; margin-bottom: 22px; color: var(--text); }
+.confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
 /* ═══════════════════ RESPONSIVE ═══════════════════ */
 @media (max-width: 800px) {
   .kd-sidebar { width: 200px; }

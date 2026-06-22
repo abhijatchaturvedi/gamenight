@@ -23,7 +23,7 @@ const TicTacToe = (() => {
       App.socket.emit('game:back_to_lobby');
     });
     document.getElementById('ttt-leave').addEventListener('click', () => {
-      if (confirm('Exit the game? You will leave the room.')) location.reload();
+      showConfirm('Exit the game? You will leave the room.', () => location.reload(), { confirmText: 'Exit', danger: true });
     });
 
     App.socket.on('ttt:tournament_state', onTournamentState);

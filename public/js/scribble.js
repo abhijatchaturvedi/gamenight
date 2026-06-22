@@ -23,7 +23,7 @@ const Scribble = (() => {
     document.getElementById('scb-btn-again').addEventListener('click', () => App.socket.emit('game:restart'));
     document.getElementById('scb-btn-lobby').addEventListener('click', () => App.socket.emit('game:back_to_lobby'));
     document.getElementById('scb-btn-exit').addEventListener('click', () => {
-      if (confirm('Exit the game? You will leave the room.')) location.reload();
+      showConfirm('Exit the game? You will leave the room.', () => location.reload(), { confirmText: 'Exit', danger: true });
     });
 
     App.socket.on('scribble:turn_start', onTurnStart);

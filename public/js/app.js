@@ -103,6 +103,37 @@ function showCountdown() {
   step();
 }
 
+function showConfirm(message, onConfirm, opts = {}) {
+  const { confirmText = 'Confirm', cancelText = 'Cancel', danger = false } = opts;
+  document.getElementById('confirm-modal')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'confirm-modal';
+  overlay.className = 'confirm-overlay';
+  overlay.innerHTML =
+    `<div class="confirm-box">` +
+    `<p class="confirm-msg">${message}</p>` +
+    `<div class="confirm-actions">` +
+    `<button class="btn-ghost confirm-cancel">${cancelText}</button>` +
+    `<button class="${danger ? 'btn-danger' : 'btn-primary'} confirm-ok">${confirmText}</button>` +
+    `</div></div>`;
+  document.body.appendChild(overlay);
+
+  const cleanup = () => { overlay.remove(); document.removeEventListener('keydown', onKey); };
+  const doConfirm = () => { cleanup(); onConfirm(); };
+
+  overlay.querySelector('.confirm-cancel').addEventListener('click', cleanup);
+  overlay.querySelector('.confirm-ok').addEventListener('click', doConfirm);
+  overlay.addEventListener('click', e => { if (e.target === overlay) cleanup(); });
+
+  function onKey(e) {
+    if (e.key === 'Escape') cleanup();
+    if (e.key === 'Enter') doConfirm();
+  }
+  document.addEventListener('keydown', onKey);
+  overlay.querySelector('.confirm-ok').focus();
+}
+
 function showError(elId, msg) {
   const el = document.getElementById(elId);
   if (!el) return;
@@ -392,14 +423,14 @@ function renderLobby({ players, code, gameType, hostId, minPlayers, settings, se
       transferBtn.title = 'Make host';
       transferBtn.textContent = '👑';
       transferBtn.addEventListener('click', () => {
-        if (confirm(`Make ${p.name} the host?`)) App.socket.emit('room:transfer_host', { playerId: p.id });
+        showConfirm(`Make ${p.name} the host?`, () => App.socket.emit('room:transfer_host', { playerId: p.id }), { confirmText: 'Make Host' });
       });
       const kickBtn = document.createElement('button');
       kickBtn.className = 'btn-host-ctrl btn-kick-ctrl';
       kickBtn.title = 'Kick player';
       kickBtn.textContent = '🚫';
       kickBtn.addEventListener('click', () => {
-        if (confirm(`Kick ${p.name}?`)) App.socket.emit('room:kick', { playerId: p.id });
+        showConfirm(`Kick ${p.name}?`, () => App.socket.emit('room:kick', { playerId: p.id }), { confirmText: 'Kick', danger: true });
       });
       controls.appendChild(transferBtn);
       controls.appendChild(kickBtn);
