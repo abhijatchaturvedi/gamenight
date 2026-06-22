@@ -146,52 +146,15 @@ function renderSettings(gameType, settings, isHost) {
     wrap.appendChild(label);
 
     if (isHost && field.isTime) {
-      const container = document.createElement('div');
-      container.className = 'time-setting-wrap';
-
-      const sel = document.createElement('select');
-      sel.id = `setting-${field.id}`;
-      const presetValues = field.options.map(o => +o.v);
-      const isPreset = presetValues.includes(+currentVal);
-
-      field.options.forEach(opt => {
-        const o = document.createElement('option');
-        o.value = opt.v;
-        o.textContent = opt.l;
-        if (isPreset && +opt.v === +currentVal) o.selected = true;
-        sel.appendChild(o);
-      });
-      const customOpt = document.createElement('option');
-      customOpt.value = 'custom';
-      customOpt.textContent = 'Custom…';
-      if (!isPreset) customOpt.selected = true;
-      sel.appendChild(customOpt);
-
-      const customInput = document.createElement('input');
-      customInput.type = 'number';
-      customInput.id = `setting-${field.id}-custom`;
-      customInput.min = 10;
-      customInput.max = 600;
-      customInput.placeholder = 'seconds (10–600)';
-      customInput.className = 'custom-time-input';
-      if (!isPreset) {
-        customInput.value = currentVal;
-      } else {
-        customInput.classList.add('hidden');
-      }
-
-      sel.addEventListener('change', () => {
-        if (sel.value === 'custom') {
-          customInput.classList.remove('hidden');
-          customInput.focus();
-        } else {
-          customInput.classList.add('hidden');
-        }
-      });
-
-      container.appendChild(sel);
-      container.appendChild(customInput);
-      wrap.appendChild(container);
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.id = `setting-${field.id}`;
+      input.min = 10;
+      input.max = 600;
+      input.value = currentVal;
+      input.placeholder = 'seconds (10–600)';
+      input.className = 'custom-time-input';
+      wrap.appendChild(input);
     } else if (isHost) {
       const sel = document.createElement('select');
       sel.id = `setting-${field.id}`;
@@ -206,8 +169,12 @@ function renderSettings(gameType, settings, isHost) {
     } else {
       const val = document.createElement('div');
       val.className = 'settings-val';
-      const opt = field.options.find(o => +o.v === +currentVal);
-      val.textContent = opt ? opt.l.replace(' ★','') : `${currentVal}s`;
+      if (field.isTime) {
+        val.textContent = `${currentVal}s`;
+      } else {
+        const opt = field.options.find(o => +o.v === +currentVal);
+        val.textContent = opt ? opt.l.replace(' ★','') : currentVal;
+      }
       wrap.appendChild(val);
     }
 
@@ -224,13 +191,12 @@ function saveSettings() {
   schema.forEach(field => {
     const el = document.getElementById(`setting-${field.id}`);
     if (!el) return;
-    if (field.isTime && el.value === 'custom') {
-      const customEl = document.getElementById(`setting-${field.id}-custom`);
-      const customVal = parseInt(customEl?.value, 10);
-      if (!isNaN(customVal) && customVal >= 10 && customVal <= 600) {
-        newSettings[field.id] = customVal;
+    if (field.isTime) {
+      const val = parseInt(el.value, 10);
+      if (!isNaN(val) && val >= 10 && val <= 600) {
+        newSettings[field.id] = val;
       } else {
-        showError('home-error', `${field.label}: please enter a value between 10 and 600 seconds.`);
+        showError('home-error', `${field.label}: enter a value between 10 and 600 seconds.`);
       }
     } else {
       newSettings[field.id] = el.value;
