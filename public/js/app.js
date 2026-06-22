@@ -33,7 +33,7 @@ const App = {
 // ═══════════════════ SETTINGS SCHEMA (client-side) ═══════════════════
 const SETTINGS_SCHEMA = {
   scribble: [
-    { id: 'drawTime', label: 'Draw Time', default: 80, isTime: true,
+    { id: 'drawTime', label: 'Draw Time', default: 45, isTime: true,
       options: [{v:40,l:'40 sec'},{v:60,l:'60 sec'},{v:80,l:'80 sec ★'},{v:100,l:'100 sec'},{v:120,l:'2 min'}] },
     { id: 'rounds', label: 'Rounds', default: 3,
       options: [{v:2,l:'2 rounds'},{v:3,l:'3 rounds ★'},{v:4,l:'4 rounds'},{v:5,l:'5 rounds'}] },
@@ -41,9 +41,9 @@ const SETTINGS_SCHEMA = {
       options: [{v:2,l:'2 words'},{v:3,l:'3 words ★'},{v:4,l:'4 words'}] },
   ],
   killerdoctor: [
-    { id: 'discussionTime', label: 'Discussion Time', default: 120, isTime: true,
+    { id: 'discussionTime', label: 'Discussion Time', default: 45, isTime: true,
       options: [{v:60,l:'1 min'},{v:90,l:'90 sec'},{v:120,l:'2 min ★'},{v:150,l:'2.5 min'},{v:180,l:'3 min'}] },
-    { id: 'votingTime', label: 'Voting Time', default: 60, isTime: true,
+    { id: 'votingTime', label: 'Voting Time', default: 45, isTime: true,
       options: [{v:30,l:'30 sec'},{v:45,l:'45 sec'},{v:60,l:'60 sec ★'},{v:90,l:'90 sec'}] },
     { id: 'nightTime', label: 'Night Action Time', default: 45, isTime: true,
       options: [{v:30,l:'30 sec'},{v:45,l:'45 sec ★'},{v:60,l:'60 sec'}] },

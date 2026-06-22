@@ -17,8 +17,8 @@ const playerRooms = new Map(); // socketId -> roomCode
 
 function defaultSettings(gameType) {
   switch (gameType) {
-    case 'scribble':     return { drawTime: 80, rounds: 3, wordChoices: 3 };
-    case 'killerdoctor': return { discussionTime: 120, votingTime: 60, nightTime: 45 };
+    case 'scribble':     return { drawTime: 45, rounds: 3, wordChoices: 3 };
+    case 'killerdoctor': return { discussionTime: 45, votingTime: 45, nightTime: 45 };
     case 'tictactoe':    return { bestOf: 0 };
     default:             return {};
   }
