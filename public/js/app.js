@@ -1,3 +1,22 @@
+// ═══════════════════ AVATARS ═══════════════════
+const AVATARS = [
+  { emoji: '🧙', name: 'Wizard' },   { emoji: '⚔️', name: 'Warrior' },
+  { emoji: '🏹', name: 'Archer' },   { emoji: '🛡️', name: 'Knight' },
+  { emoji: '🔮', name: 'Seer' },     { emoji: '🗡️', name: 'Rogue' },
+  { emoji: '🦊', name: 'Fox' },      { emoji: '🐺', name: 'Wolf' },
+  { emoji: '🦅', name: 'Eagle' },    { emoji: '🧝', name: 'Elf' },
+  { emoji: '🤺', name: 'Duelist' },  { emoji: '🧛', name: 'Vampire' },
+  { emoji: '🧟', name: 'Ghost' },    { emoji: '🧜', name: 'Mermaid' },
+  { emoji: '🎭', name: 'Jester' },   { emoji: '👑', name: 'King' },
+  { emoji: '🐉', name: 'Dragon' },   { emoji: '🦁', name: 'Lion' },
+  { emoji: '🐻', name: 'Bear' },     { emoji: '🦄', name: 'Unicorn' },
+  { emoji: '🐙', name: 'Octopus' },  { emoji: '🦝', name: 'Raccoon' },
+  { emoji: '🐧', name: 'Penguin' },  { emoji: '🦋', name: 'Butterfly' },
+  { emoji: '🐸', name: 'Frog' },     { emoji: '🦩', name: 'Flamingo' },
+  { emoji: '🐯', name: 'Tiger' },    { emoji: '🦀', name: 'Crab' },
+  { emoji: '🦜', name: 'Parrot' },   { emoji: '🐳', name: 'Whale' },
+];
+
 // ═══════════════════ GLOBAL STATE ═══════════════════
 const App = {
   socket: io(),
@@ -8,6 +27,7 @@ const App = {
   isHost: false,
   selectedGame: 'killerdoctor',
   currentSettings: {},
+  myAvatar: 0,
 };
 
 // ═══════════════════ SETTINGS SCHEMA (client-side) ═══════════════════
@@ -208,6 +228,24 @@ function saveSettings() {
   setTimeout(() => msg.classList.add('hidden'), 2000);
 }
 
+// ═══════════════════ AVATAR PICKER ═══════════════════
+function initAvatarPicker() {
+  const grid = document.getElementById('avatar-picker');
+  AVATARS.forEach((av, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'avatar-opt' + (i === 0 ? ' selected' : '');
+    btn.textContent = av.emoji;
+    btn.title = av.name;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.avatar-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      App.myAvatar = i;
+    });
+    grid.appendChild(btn);
+  });
+}
+
 // ═══════════════════ HOME SCREEN ═══════════════════
 function initHome() {
   document.querySelectorAll('.game-card').forEach(card => {
@@ -225,7 +263,7 @@ function initHome() {
     if (!name) { showError('home-error', 'Please enter your name.'); return; }
     App.myName = name;
     showLoading(true);
-    App.socket.emit('room:create', { gameType: App.selectedGame, playerName: name });
+    App.socket.emit('room:create', { gameType: App.selectedGame, playerName: name, avatar: App.myAvatar });
   });
 
   document.getElementById('btn-join').addEventListener('click', doJoin);
@@ -245,7 +283,7 @@ function doJoin() {
   if (!code) { showError('home-error', 'Please enter a room code.'); return; }
   App.myName = name;
   showLoading(true);
-  App.socket.emit('room:join', { code, playerName: name });
+  App.socket.emit('room:join', { code, playerName: name, avatar: App.myAvatar });
 }
 
 // ═══════════════════ LOBBY ═══════════════════
@@ -278,7 +316,10 @@ function renderLobby({ players, code, gameType, hostId, minPlayers, settings }) 
   players.forEach(p => {
     const card = document.createElement('div');
     card.className = 'lobby-player-card' + (p.isHost ? ' is-host' : '');
-    card.appendChild(avatarEl(p.name, 48));
+    const av = document.createElement('div');
+    av.className = 'lobby-player-emoji';
+    av.textContent = AVATARS[p.avatar ?? 0].emoji;
+    card.appendChild(av);
     const nameEl = document.createElement('div');
     nameEl.className = 'lobby-player-name';
     nameEl.textContent = p.name + (p.id === App.myId ? ' (You)' : '');
@@ -342,6 +383,7 @@ App.socket.on('kd:reconnect',    data  => { showView('killerdoctor'); KillerDoct
 
 // ═══════════════════ INIT ═══════════════════
 document.addEventListener('DOMContentLoaded', () => {
+  initAvatarPicker();
   initHome();
   initLobby();
   initRulesModal();

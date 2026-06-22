@@ -62,7 +62,7 @@ function minPlayers(g) { return { tictactoe: 2, killerdoctor: 4, scribble: 3 }[g
 
 function broadcastLobby(room) {
   io.to(room.code).emit('lobby:update', {
-    players: [...room.players.values()].map(p => ({ id: p.id, name: p.name, isHost: p.id === room.host })),
+    players: [...room.players.values()].map(p => ({ id: p.id, name: p.name, avatar: p.avatar ?? 0, isHost: p.id === room.host })),
     code: room.code,
     gameType: room.gameType,
     hostId: room.host,
@@ -85,13 +85,13 @@ function getLocalIPs() {
 
 io.on('connection', socket => {
 
-  socket.on('room:create', ({ gameType, playerName }) => {
+  socket.on('room:create', ({ gameType, playerName, avatar }) => {
     if (!playerName?.trim() || !gameType) return;
     const code = uniqueCode();
     const room = {
       code, gameType,
       host: socket.id,
-      players: new Map([[socket.id, { id: socket.id, name: playerName.trim() }]]),
+      players: new Map([[socket.id, { id: socket.id, name: playerName.trim(), avatar: Number(avatar) || 0 }]]),
       status: 'lobby',
       gameState: null,
       timers: [],
@@ -104,7 +104,7 @@ io.on('connection', socket => {
     broadcastLobby(room);
   });
 
-  socket.on('room:join', ({ code, playerName }) => {
+  socket.on('room:join', ({ code, playerName, avatar }) => {
     const upper = (code || '').toUpperCase().trim();
     const room = rooms.get(upper);
     if (!room) { socket.emit('room:error', { msg: 'Room not found.' }); return; }
@@ -125,7 +125,7 @@ io.on('connection', socket => {
 
     if (room.players.has(socket.id)) return;
     const name = (playerName || '').trim() || `Player${room.players.size + 1}`;
-    room.players.set(socket.id, { id: socket.id, name });
+    room.players.set(socket.id, { id: socket.id, name, avatar: Number(avatar) || 0 });
     playerRooms.set(socket.id, upper);
     socket.join(upper);
     socket.emit('room:joined', { code: upper, isHost: false, gameType: room.gameType });
@@ -516,14 +516,14 @@ function startKD(room) {
   const players = [...room.players.values()].sort(() => Math.random() - 0.5);
   const playerData = {};
   players.forEach((p, i) => {
-    playerData[p.id] = { id: p.id, name: p.name,
+    playerData[p.id] = { id: p.id, name: p.name, avatar: p.avatar ?? 0,
       role: i === 0 ? 'killer' : i === 1 ? 'doctor' : 'villager',
       alive: true, hasActedNight: false, nightChoice: null, vote: null };
   });
   room.gameState = { type: 'killerdoctor', phase: 'role_reveal', playerData, round: 1, history: [] };
   players.forEach(p => io.to(p.id).emit('kd:role_assigned', {
     role: playerData[p.id].role,
-    allPlayers: players.map(q => ({ id: q.id, name: q.name })),
+    allPlayers: players.map(q => kdPub(playerData[q.id])),
   }));
   addTimer(room, () => kdStartNight(room), 6000);
 }
@@ -535,13 +535,13 @@ function kdStartNight(room) {
   const alive = kdAlive(gs);
   io.to(room.code).emit('kd:night_start', {
     round: gs.round,
-    livingPlayers: alive.map(p => ({ id: p.id, name: p.name })),
-    deadPlayers: kdDead(gs).map(p => ({ id: p.id, name: p.name })),
+    livingPlayers: alive.map(kdPub),
+    deadPlayers: kdDead(gs).map(kdPub),
   });
   const killer = kdRole(gs, 'killer'), doctor = kdRole(gs, 'doctor');
-  if (killer?.alive) io.to(killer.id).emit('kd:killer_action', { targets: alive.filter(p => p.id !== killer.id).map(p => ({ id: p.id, name: p.name })) });
+  if (killer?.alive) io.to(killer.id).emit('kd:killer_action', { targets: alive.filter(p => p.id !== killer.id).map(kdPub) });
   else if (killer) killer.hasActedNight = true;
-  if (doctor?.alive) io.to(doctor.id).emit('kd:doctor_action', { targets: alive.map(p => ({ id: p.id, name: p.name })) });
+  if (doctor?.alive) io.to(doctor.id).emit('kd:doctor_action', { targets: alive.map(kdPub) });
   else if (doctor) doctor.hasActedNight = true;
   const nightTime = room.settings?.nightTime ?? 45;
   addTimer(room, () => { if (room.gameState?.phase !== 'night') return; kdAutoNight(room); kdResolveNight(room); }, nightTime * 1000);
@@ -573,10 +573,10 @@ function kdResolveNight(room) {
   if (died) gs.history.push({ name: gs.playerData[died].name, reason: 'night_kill', round: gs.round });
   io.to(room.code).emit('kd:night_result', {
     message: msg,
-    died: died ? { id: died, name: gs.playerData[died].name } : null,
+    died: died ? kdPub(gs.playerData[died]) : null,
     saved,
-    livingPlayers: kdAlive(gs).map(p => ({ id: p.id, name: p.name })),
-    deadPlayers: kdDead(gs).map(p => ({ id: p.id, name: p.name })),
+    livingPlayers: kdAlive(gs).map(kdPub),
+    deadPlayers: kdDead(gs).map(kdPub),
   });
   const win = kdCheckWin(gs);
   if (win) { addTimer(room, () => endKD(room, win), 3500); return; }
@@ -596,8 +596,8 @@ function kdStartDay(room) {
   const dur = room.settings?.discussionTime ?? 120;
   io.to(room.code).emit('kd:day_start', {
     round: gs.round, duration: dur,
-    livingPlayers: kdAlive(gs).map(p => ({ id: p.id, name: p.name })),
-    deadPlayers: kdDead(gs).map(p => ({ id: p.id, name: p.name })),
+    livingPlayers: kdAlive(gs).map(kdPub),
+    deadPlayers: kdDead(gs).map(kdPub),
   });
   addTimer(room, () => { if (room.gameState?.phase === 'day_discussion') kdStartVoting(room); }, dur * 1000);
 }
@@ -608,8 +608,8 @@ function kdStartVoting(room) {
   const dur = room.settings?.votingTime ?? 60;
   io.to(room.code).emit('kd:voting_start', {
     duration: dur,
-    livingPlayers: kdAlive(gs).map(p => ({ id: p.id, name: p.name })),
-    deadPlayers: kdDead(gs).map(p => ({ id: p.id, name: p.name })),
+    livingPlayers: kdAlive(gs).map(kdPub),
+    deadPlayers: kdDead(gs).map(kdPub),
   });
   addTimer(room, () => { if (room.gameState?.phase === 'voting') kdResolveVoting(room); }, dur * 1000);
 }
@@ -628,15 +628,15 @@ function kdResolveVoting(room) {
     elimPlayer = gs.playerData[elim]; elimPlayer.alive = false;
     gs.history.push({ name: elimPlayer.name, reason: 'vote', role: elimPlayer.role, round: gs.round });
   }
-  const voteDetails = Object.entries(tally).map(([pid,cnt]) => ({ id: pid, name: gs.playerData[pid]?.name, votes: cnt }));
+  const voteDetails = Object.entries(tally).map(([pid,cnt]) => ({ ...kdPub(gs.playerData[pid]), votes: cnt }));
   io.to(room.code).emit('kd:vote_result', {
     tied, voteDetails,
-    eliminated: elimPlayer ? { id: elimPlayer.id, name: elimPlayer.name, role: elimPlayer.role } : null,
+    eliminated: elimPlayer ? { ...kdPub(elimPlayer), role: elimPlayer.role } : null,
     message: tied ? 'The vote ended in a tie. Nobody was eliminated.'
       : elimPlayer ? `${elimPlayer.name} was eliminated by the village!`
       : 'Nobody was eliminated.',
-    livingPlayers: kdAlive(gs).map(p => ({ id: p.id, name: p.name })),
-    deadPlayers: kdDead(gs).map(p => ({ id: p.id, name: p.name })),
+    livingPlayers: kdAlive(gs).map(kdPub),
+    deadPlayers: kdDead(gs).map(kdPub),
   });
   const win = kdCheckWin(gs);
   if (win) { addTimer(room, () => endKD(room, win), 5000); return; }
@@ -655,7 +655,7 @@ function endKD(room, win) {
   const gs = room.gameState; gs.phase = 'game_over'; room.status = 'ended';
   io.to(room.code).emit('kd:game_over', {
     winner: win.winner, reason: win.reason,
-    allPlayers: Object.values(gs.playerData).map(p => ({ id: p.id, name: p.name, role: p.role, alive: p.alive })),
+    allPlayers: Object.values(gs.playerData).map(p => ({ ...kdPub(p), role: p.role, alive: p.alive })),
     history: gs.history,
   });
 }
@@ -689,6 +689,7 @@ function kdAction(room, socket, data) {
 const kdAlive = gs => Object.values(gs.playerData).filter(p => p.alive);
 const kdDead  = gs => Object.values(gs.playerData).filter(p => !p.alive);
 const kdRole  = (gs, role) => Object.values(gs.playerData).find(p => p.role === role);
+const kdPub   = p  => ({ id: p.id, name: p.name, avatar: p.avatar ?? 0 });
 
 // ─────────────────────────── SCRIBBLE ───────────────────────────
 

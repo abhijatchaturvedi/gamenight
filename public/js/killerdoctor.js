@@ -2,7 +2,6 @@ const KillerDoctor = (() => {
   let myRole = null;
   let roleVisible = true;
   let timerInterval = null;
-  let playerCharMap = {};
 
   const ROLE_INFO = {
     killer:   { icon: '🔪', color: '#ef4444', desc: 'Kill one player each night. Stay hidden.' },
@@ -10,26 +9,8 @@ const KillerDoctor = (() => {
     villager: { icon: '🧑', color: '#94a3b8', desc: 'Find and vote out the Killer before it\'s too late.' },
   };
 
-  const PLAYER_CHARACTERS = [
-    { emoji: '🧙', name: 'Wizard' },
-    { emoji: '⚔️', name: 'Warrior' },
-    { emoji: '🏹', name: 'Archer' },
-    { emoji: '🛡️', name: 'Knight' },
-    { emoji: '🔮', name: 'Seer' },
-    { emoji: '🗡️', name: 'Rogue' },
-    { emoji: '🦊', name: 'Fox' },
-    { emoji: '🐺', name: 'Wolf' },
-    { emoji: '🦅', name: 'Eagle' },
-    { emoji: '🧝', name: 'Elf' },
-    { emoji: '🤺', name: 'Duelist' },
-    { emoji: '🧛', name: 'Vampire' },
-    { emoji: '🧟', name: 'Wanderer' },
-    { emoji: '🧜', name: 'Mystic' },
-    { emoji: '🎭', name: 'Jester' },
-  ];
-
-  function getPlayerChar(id) {
-    return PLAYER_CHARACTERS[playerCharMap[id] ?? 0];
+  function getAvatar(p) {
+    return AVATARS[p?.avatar ?? 0] || AVATARS[0];
   }
 
   function init() {
@@ -105,12 +86,12 @@ const KillerDoctor = (() => {
   function setRole(role, alive = true) {
     myRole = role;
     const info = ROLE_INFO[role] || {};
-    const char = getPlayerChar(App.myId);
+    const av = AVATARS[App.myAvatar ?? 0] || AVATARS[0];
     const card = document.getElementById('kd-role-card');
     card.dataset.role = role;
     document.getElementById('kd-role-name').textContent = `${info.icon || ''} ${role?.toUpperCase() || '—'}`;
     document.getElementById('kd-role-desc').textContent = info.desc || '';
-    document.getElementById('kd-role-character').textContent = `${char.emoji} ${char.name}`;
+    document.getElementById('kd-role-character').textContent = `${av.emoji} ${av.name}`;
     document.getElementById('kd-you-status').textContent = alive ? '🟢 Alive' : '💀 Dead';
     roleVisible = true;
     card.classList.remove('hidden-role');
@@ -125,11 +106,11 @@ const KillerDoctor = (() => {
     all.forEach(p => {
       const item = document.createElement('div');
       item.className = 'kd-player-item' + (p.alive ? '' : ' dead');
-      const char = getPlayerChar(p.id);
+      const av = getAvatar(p);
       const charIcon = document.createElement('div');
       charIcon.className = 'player-char-icon';
-      charIcon.textContent = char.emoji;
-      charIcon.title = char.name;
+      charIcon.textContent = av.emoji;
+      charIcon.title = av.name;
       const nameWrap = document.createElement('div');
       nameWrap.className = 'player-name-wrap';
       nameWrap.textContent = p.name;
@@ -208,10 +189,6 @@ const KillerDoctor = (() => {
   }
 
   function onRoleAssigned({ role, allPlayers }) {
-    playerCharMap = {};
-    allPlayers.forEach((p, i) => {
-      playerCharMap[p.id] = i % PLAYER_CHARACTERS.length;
-    });
     setRole(role);
     renderPlayerList(allPlayers, []);
     setPhase('reveal');
@@ -243,10 +220,9 @@ const KillerDoctor = (() => {
   function makeTargetBtn(t, onClick) {
     const btn = document.createElement('button');
     btn.className = 'target-btn';
-    const char = getPlayerChar(t.id);
     const charEl = document.createElement('div');
     charEl.className = 'target-char';
-    charEl.textContent = char.emoji;
+    charEl.textContent = getAvatar(t).emoji;
     const nameEl = document.createElement('span');
     nameEl.textContent = t.name;
     btn.appendChild(charEl);
@@ -315,8 +291,7 @@ const KillerDoctor = (() => {
 
     const victimEl = document.getElementById('kd-night-victim');
     if (died) {
-      const char = getPlayerChar(died.id);
-      victimEl.innerHTML = `<span class="victim-char">${char.emoji}</span><span class="victim-name">${died.name} has fallen</span>`;
+      victimEl.innerHTML = `<span class="victim-char">${getAvatar(died).emoji}</span><span class="victim-name">${died.name} has fallen</span>`;
       victimEl.className = 'night-victim-display victim-dead';
     } else if (saved) {
       victimEl.innerHTML = `<span class="victim-char">💚</span><span class="victim-name">Protected by the Doctor</span>`;
@@ -351,10 +326,9 @@ const KillerDoctor = (() => {
       const btn = document.createElement('button');
       btn.className = 'vote-btn';
       btn.disabled = !isAlive;
-      const char = getPlayerChar(t.id);
       const charEl = document.createElement('div');
       charEl.className = 'vote-char';
-      charEl.textContent = char.emoji;
+      charEl.textContent = getAvatar(t).emoji;
       const nameEl = document.createElement('div');
       nameEl.textContent = t.name;
       btn.appendChild(charEl);
@@ -393,8 +367,7 @@ const KillerDoctor = (() => {
       }
       const reveal = document.getElementById('kd-elim-reveal');
       reveal.className = `role-reveal-card ${eliminated.role}`;
-      const char = getPlayerChar(eliminated.id);
-      reveal.innerHTML = `<div class="reveal-char">${char.emoji}</div><div class="reveal-role">${ROLE_INFO[eliminated.role]?.icon || ''} ${eliminated.role.toUpperCase()}</div><div>${eliminated.name} was the ${eliminated.role}!</div>`;
+      reveal.innerHTML = `<div class="reveal-char">${getAvatar(eliminated).emoji}</div><div class="reveal-role">${ROLE_INFO[eliminated.role]?.icon || ''} ${eliminated.role.toUpperCase()}</div><div>${eliminated.name} was the ${eliminated.role}!</div>`;
       reveal.classList.remove('hidden');
       document.getElementById('kd-elim-icon').textContent = eliminated.role === 'killer' ? '⚰️' : '😢';
       document.getElementById('kd-elim-title').textContent = eliminated.role === 'killer' ? 'Killer Found!' : 'Innocent Eliminated';
@@ -410,8 +383,7 @@ const KillerDoctor = (() => {
     (voteDetails || []).sort((a,b) => b.votes - a.votes).forEach(v => {
       const d = document.createElement('div');
       d.className = 'vote-detail-item';
-      const char = getPlayerChar(v.id);
-      d.innerHTML = `${char.emoji} ${v.name}: <span class="vote-count">${v.votes} vote${v.votes !== 1 ? 's' : ''}</span>`;
+      d.innerHTML = `${getAvatar(v).emoji} ${v.name}: <span class="vote-count">${v.votes} vote${v.votes !== 1 ? 's' : ''}</span>`;
       detail.appendChild(d);
     });
 
@@ -433,10 +405,9 @@ const KillerDoctor = (() => {
     grid.innerHTML = '';
     allPlayers.forEach(p => {
       const info = ROLE_INFO[p.role] || {};
-      const char = getPlayerChar(p.id);
       const card = document.createElement('div');
       card.className = 'final-player-card' + (p.alive ? '' : ' dead');
-      card.innerHTML = `<div class="fp-char">${char.emoji}</div><div class="fp-name">${p.name}${p.id === App.myId ? ' (you)' : ''}</div><div class="fp-role ${p.role}">${info.icon || ''} ${p.role}</div><div style="font-size:.75rem;color:var(--muted)">${p.alive ? 'Survived' : 'Eliminated'}</div>`;
+      card.innerHTML = `<div class="fp-char">${getAvatar(p).emoji}</div><div class="fp-name">${p.name}${p.id === App.myId ? ' (you)' : ''}</div><div class="fp-role ${p.role}">${info.icon || ''} ${p.role}</div><div style="font-size:.75rem;color:var(--muted)">${p.alive ? 'Survived' : 'Eliminated'}</div>`;
       grid.appendChild(card);
     });
 

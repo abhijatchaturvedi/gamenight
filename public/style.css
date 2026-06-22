@@ -93,6 +93,12 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 
 .join-box { width: 100%; max-width: 420px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 28px; }
 .form-row { margin-bottom: 14px; }
+.avatar-section { margin: 0 0 16px; }
+.avatar-section-label { font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+.avatar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; max-height: 192px; overflow-y: auto; }
+.avatar-opt { background: var(--card); border: 2px solid var(--border); border-radius: 8px; font-size: 1.2rem; padding: 5px; cursor: pointer; transition: border-color .12s, transform .12s, background .12s; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+.avatar-opt:hover { border-color: var(--accent); transform: scale(1.12); }
+.avatar-opt.selected { border-color: var(--accent); background: rgba(124,58,237,.18); box-shadow: 0 0 0 2px rgba(124,58,237,.35); }
 .row-inline { display: flex; gap: 10px; }
 .row-inline input { flex: 1; }
 
@@ -119,6 +125,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .lobby-player-card.is-host { border-color: var(--accent); }
 .player-avatar { width: 48px; height: 48px; border-radius: 50%; margin: 0 auto 10px;
   display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; color: #fff; }
+.lobby-player-emoji { font-size: 2.2rem; margin-bottom: 6px; line-height: 1; }
 .lobby-player-name { font-size: 0.875rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .host-crown { font-size: 0.75rem; color: var(--yellow); margin-top: 4px; }
 
