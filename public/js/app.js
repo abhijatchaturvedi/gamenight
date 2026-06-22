@@ -13,7 +13,7 @@ const App = {
 // ═══════════════════ SETTINGS SCHEMA (client-side) ═══════════════════
 const SETTINGS_SCHEMA = {
   scribble: [
-    { id: 'drawTime', label: 'Draw Time', default: 80,
+    { id: 'drawTime', label: 'Draw Time', default: 80, isTime: true,
       options: [{v:40,l:'40 sec'},{v:60,l:'60 sec'},{v:80,l:'80 sec ★'},{v:100,l:'100 sec'},{v:120,l:'2 min'}] },
     { id: 'rounds', label: 'Rounds', default: 3,
       options: [{v:2,l:'2 rounds'},{v:3,l:'3 rounds ★'},{v:4,l:'4 rounds'},{v:5,l:'5 rounds'}] },
@@ -21,11 +21,11 @@ const SETTINGS_SCHEMA = {
       options: [{v:2,l:'2 words'},{v:3,l:'3 words ★'},{v:4,l:'4 words'}] },
   ],
   killerdoctor: [
-    { id: 'discussionTime', label: 'Discussion Time', default: 120,
+    { id: 'discussionTime', label: 'Discussion Time', default: 120, isTime: true,
       options: [{v:60,l:'1 min'},{v:90,l:'90 sec'},{v:120,l:'2 min ★'},{v:150,l:'2.5 min'},{v:180,l:'3 min'}] },
-    { id: 'votingTime', label: 'Voting Time', default: 60,
+    { id: 'votingTime', label: 'Voting Time', default: 60, isTime: true,
       options: [{v:30,l:'30 sec'},{v:45,l:'45 sec'},{v:60,l:'60 sec ★'},{v:90,l:'90 sec'}] },
-    { id: 'nightTime', label: 'Night Action Time', default: 45,
+    { id: 'nightTime', label: 'Night Action Time', default: 45, isTime: true,
       options: [{v:30,l:'30 sec'},{v:45,l:'45 sec ★'},{v:60,l:'60 sec'}] },
   ],
   tictactoe: [
@@ -145,7 +145,54 @@ function renderSettings(gameType, settings, isHost) {
     label.textContent = field.label;
     wrap.appendChild(label);
 
-    if (isHost) {
+    if (isHost && field.isTime) {
+      const container = document.createElement('div');
+      container.className = 'time-setting-wrap';
+
+      const sel = document.createElement('select');
+      sel.id = `setting-${field.id}`;
+      const presetValues = field.options.map(o => +o.v);
+      const isPreset = presetValues.includes(+currentVal);
+
+      field.options.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.v;
+        o.textContent = opt.l;
+        if (isPreset && +opt.v === +currentVal) o.selected = true;
+        sel.appendChild(o);
+      });
+      const customOpt = document.createElement('option');
+      customOpt.value = 'custom';
+      customOpt.textContent = 'Custom…';
+      if (!isPreset) customOpt.selected = true;
+      sel.appendChild(customOpt);
+
+      const customInput = document.createElement('input');
+      customInput.type = 'number';
+      customInput.id = `setting-${field.id}-custom`;
+      customInput.min = 10;
+      customInput.max = 600;
+      customInput.placeholder = 'seconds (10–600)';
+      customInput.className = 'custom-time-input';
+      if (!isPreset) {
+        customInput.value = currentVal;
+      } else {
+        customInput.classList.add('hidden');
+      }
+
+      sel.addEventListener('change', () => {
+        if (sel.value === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+        }
+      });
+
+      container.appendChild(sel);
+      container.appendChild(customInput);
+      wrap.appendChild(container);
+    } else if (isHost) {
       const sel = document.createElement('select');
       sel.id = `setting-${field.id}`;
       field.options.forEach(opt => {
@@ -160,7 +207,7 @@ function renderSettings(gameType, settings, isHost) {
       const val = document.createElement('div');
       val.className = 'settings-val';
       const opt = field.options.find(o => +o.v === +currentVal);
-      val.textContent = opt ? opt.l.replace(' ★','') : currentVal;
+      val.textContent = opt ? opt.l.replace(' ★','') : `${currentVal}s`;
       wrap.appendChild(val);
     }
 
@@ -176,7 +223,18 @@ function saveSettings() {
   const newSettings = {};
   schema.forEach(field => {
     const el = document.getElementById(`setting-${field.id}`);
-    if (el) newSettings[field.id] = el.value;
+    if (!el) return;
+    if (field.isTime && el.value === 'custom') {
+      const customEl = document.getElementById(`setting-${field.id}-custom`);
+      const customVal = parseInt(customEl?.value, 10);
+      if (!isNaN(customVal) && customVal >= 10 && customVal <= 600) {
+        newSettings[field.id] = customVal;
+      } else {
+        showError('home-error', `${field.label}: please enter a value between 10 and 600 seconds.`);
+      }
+    } else {
+      newSettings[field.id] = el.value;
+    }
   });
   App.socket.emit('room:settings', newSettings);
   const msg = document.getElementById('settings-saved-msg');
@@ -311,6 +369,7 @@ App.socket.on('kd:role_assigned', data  => { showView('killerdoctor'); KillerDoc
 App.socket.on('ttt:state',        data  => { showView('tictactoe');    TicTacToe.onState(data); });
 App.socket.on('ttt:symbol',       data  =>   TicTacToe.onSymbol(data));
 App.socket.on('ttt:player_left',  data  =>   TicTacToe.onPlayerLeft(data));
+App.socket.on('ttt:tournament_state', data => { showView('tictactoe'); });  // handled inside TicTacToe module
 App.socket.on('scribble:game_start', data => { showView('scribble');  Scribble.onStart(data); });
 App.socket.on('scribble:reconnect',  data => { showView('scribble');  Scribble.onReconnect(data); });
 App.socket.on('kd:reconnect',    data  => { showView('killerdoctor'); KillerDoctor.onReconnect(data); });

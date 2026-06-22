@@ -26,20 +26,21 @@ function defaultSettings(gameType) {
 
 function validateSettings(incoming, gameType) {
   const out = {};
-  const n = k => Number(incoming[k]);
+  const n = k => Math.round(Number(incoming[k]));
+  const isValidTime = k => Number.isFinite(n(k)) && n(k) >= 10 && n(k) <= 600;
   switch (gameType) {
     case 'scribble':
-      if ([40,60,80,100,120].includes(n('drawTime')))    out.drawTime    = n('drawTime');
-      if ([2,3,4,5].includes(n('rounds')))               out.rounds      = n('rounds');
-      if ([2,3,4].includes(n('wordChoices')))            out.wordChoices = n('wordChoices');
+      if (isValidTime('drawTime'))              out.drawTime    = n('drawTime');
+      if ([2,3,4,5].includes(n('rounds')))      out.rounds      = n('rounds');
+      if ([2,3,4].includes(n('wordChoices')))   out.wordChoices = n('wordChoices');
       break;
     case 'killerdoctor':
-      if ([60,90,120,150,180].includes(n('discussionTime'))) out.discussionTime = n('discussionTime');
-      if ([30,45,60,90].includes(n('votingTime')))           out.votingTime     = n('votingTime');
-      if ([30,45,60].includes(n('nightTime')))               out.nightTime      = n('nightTime');
+      if (isValidTime('discussionTime'))        out.discussionTime = n('discussionTime');
+      if (isValidTime('votingTime'))            out.votingTime     = n('votingTime');
+      if (isValidTime('nightTime'))             out.nightTime      = n('nightTime');
       break;
     case 'tictactoe':
-      if ([0,3,5,7].includes(n('bestOf')))  out.bestOf = n('bestOf');
+      if ([0,3,5,7].includes(n('bestOf')))      out.bestOf = n('bestOf');
       break;
   }
   return out;
@@ -203,9 +204,16 @@ function sendReconnectState(room, socket) {
   if (!gs) { broadcastLobby(room); return; }
   switch (room.gameType) {
     case 'tictactoe': {
-      socket.emit('ttt:state', tttPublic(gs));
-      const sym = gs.players.X.id === socket.id ? 'X' : gs.players.O.id === socket.id ? 'O' : null;
-      socket.emit('ttt:symbol', { symbol: sym });
+      if (gs.mode === 'tournament') {
+        socket.emit('ttt:tournament_state', tttTournamentPublic(gs));
+        if (gs.board) socket.emit('ttt:state', tttPublic(gs));
+        const sym = gs.players?.X?.id === socket.id ? 'X' : gs.players?.O?.id === socket.id ? 'O' : null;
+        socket.emit('ttt:symbol', { symbol: sym });
+      } else {
+        socket.emit('ttt:state', tttPublic(gs));
+        const sym = gs.players.X.id === socket.id ? 'X' : gs.players.O.id === socket.id ? 'O' : null;
+        socket.emit('ttt:symbol', { symbol: sym });
+      }
       break;
     }
     case 'killerdoctor': {
@@ -236,7 +244,7 @@ function handleAction(room, socket, data) {
   switch (room.gameType) {
     case 'tictactoe':
       if (data.action === 'move')     tttMove(room, socket, data.index);
-      if (data.action === 'new_game') tttNewGame(room);
+      if (data.action === 'new_game' && room.gameState?.mode !== 'tournament') tttNewGame(room);
       break;
     case 'killerdoctor': kdAction(room, socket, data); break;
     case 'scribble':     scribbleAction(room, socket, data); break;
@@ -284,8 +292,22 @@ function onPlayerDisconnect(room, sid, name) {
       { const win = kdCheckWin(gs); if (win) { clearTimers(room); endKD(room, win); } else if (gs.phase === 'night') checkNightDone(room); }
       break;
     case 'tictactoe':
-      if (gs.players?.X?.id === sid || gs.players?.O?.id === sid)
+      if (gs.mode === 'tournament' && gs.players) {
+        const isActive = gs.players.X.id === sid || gs.players.O.id === sid;
+        if (isActive) {
+          const winnerId = gs.players.X.id === sid ? gs.players.O.id : gs.players.X.id;
+          if (gs.allPlayers[winnerId]) {
+            gs.rounds[gs.currentRound][gs.currentMatch].winner = winnerId;
+            delete gs.allPlayers[sid];
+            io.to(room.code).emit('notification', `${name} left — ${gs.allPlayers[winnerId]?.name} advances!`);
+            io.to(room.code).emit('ttt:tournament_state', tttTournamentPublic(gs));
+            clearTimers(room);
+            addTimer(room, () => advanceTournament(room), 2000);
+          }
+        }
+      } else if (gs.players?.X?.id === sid || gs.players?.O?.id === sid) {
         io.to(room.code).emit('ttt:player_left', { name });
+      }
       break;
     case 'scribble': {
       const idx = gs.drawerOrder.indexOf(sid); if (idx !== -1) gs.drawerOrder.splice(idx, 1);
@@ -303,30 +325,129 @@ function onPlayerDisconnect(room, sid, name) {
 
 // ─────────────────────── TIC TAC TOE ───────────────────────
 
-function startTTT(room) {
-  const players = [...room.players.values()].sort(() => Math.random() - 0.5);
-  const X = players[0], O = players[1];
-  const bestOf = room.settings?.bestOf ?? 0;
-  room.gameState = {
-    type: 'tictactoe',
-    board: Array(9).fill(null),
-    players: { X: { id: X.id, name: X.name }, O: { id: O.id, name: O.name } },
-    currentTurn: X.id,
-    winner: null, winLine: null, winnerSymbol: null,
-    scores: { [X.id]: 0, [O.id]: 0 },
-    gameCount: 1,
-    bestOf,
-    matchWinner: null,
-  };
-  io.to(room.code).emit('ttt:state', tttPublic(room.gameState));
+function nextPow2(n) { let p = 1; while (p < n) p <<= 1; return p; }
+
+function buildTournamentRounds(playerIds) {
+  const size = nextPow2(playerIds.length);
+  const seeds = [...playerIds];
+  while (seeds.length < size) seeds.push(null);
+  const rounds = [];
+  let current = seeds;
+  while (current.length > 1) {
+    const matches = [];
+    for (let i = 0; i < current.length; i += 2) {
+      const p1 = current[i], p2 = current[i + 1] ?? null;
+      const isBye = p2 === null;
+      matches.push({ p1, p2, winner: isBye ? p1 : null, isBye });
+    }
+    rounds.push(matches);
+    current = new Array(matches.length).fill(null);
+  }
+  return rounds;
+}
+
+function propagateTournamentWinners(gs) {
+  for (let r = 0; r < gs.rounds.length - 1; r++) {
+    const cur = gs.rounds[r], nxt = gs.rounds[r + 1];
+    for (let m = 0; m < cur.length; m += 2) {
+      const ti = Math.floor(m / 2);
+      if (ti >= nxt.length) break;
+      const w1 = cur[m]?.winner, w2 = cur[m + 1]?.winner;
+      if (w1) nxt[ti].p1 = w1;
+      if (w2) nxt[ti].p2 = w2;
+      if (nxt[ti].p1 && !nxt[ti].p2 && !nxt[ti].winner) { nxt[ti].winner = nxt[ti].p1; nxt[ti].isBye = true; }
+      if (!nxt[ti].p1 && nxt[ti].p2 && !nxt[ti].winner) { nxt[ti].winner = nxt[ti].p2; nxt[ti].isBye = true; }
+    }
+  }
+}
+
+function advanceTournament(room) {
+  const gs = room.gameState;
+  propagateTournamentWinners(gs);
+  const finalMatch = gs.rounds[gs.rounds.length - 1][0];
+  if (finalMatch.winner) {
+    gs.tournamentWinner = finalMatch.winner;
+    gs.board = null; gs.players = null; room.status = 'ended';
+    io.to(room.code).emit('ttt:tournament_over', {
+      winner: gs.allPlayers[gs.tournamentWinner],
+      rounds: gs.rounds, allPlayers: gs.allPlayers,
+    });
+    return;
+  }
+  for (let r = 0; r < gs.rounds.length; r++) {
+    for (let m = 0; m < gs.rounds[r].length; m++) {
+      const match = gs.rounds[r][m];
+      if (!match.winner && match.p1 && match.p2) {
+        gs.currentRound = r; gs.currentMatch = m;
+        startTournamentMatch(room, match.p1, match.p2);
+        return;
+      }
+    }
+  }
+}
+
+function startTournamentMatch(room, p1Id, p2Id) {
+  const gs = room.gameState;
+  const p1 = gs.allPlayers[p1Id], p2 = gs.allPlayers[p2Id];
+  if (!p1 || !p2) { advanceTournament(room); return; }
+  const [X, O] = Math.random() < 0.5 ? [p1, p2] : [p2, p1];
+  gs.board = Array(9).fill(null);
+  gs.players = { X: { id: X.id, name: X.name }, O: { id: O.id, name: O.name } };
+  gs.currentTurn = X.id;
+  gs.winner = null; gs.winLine = null; gs.winnerSymbol = null;
+  io.to(room.code).emit('ttt:state', tttPublic(gs));
+  io.to(room.code).emit('ttt:tournament_state', tttTournamentPublic(gs));
   io.to(X.id).emit('ttt:symbol', { symbol: 'X' });
   io.to(O.id).emit('ttt:symbol', { symbol: 'O' });
-  players.filter(p => p.id !== X.id && p.id !== O.id).forEach(p => io.to(p.id).emit('ttt:symbol', { symbol: null }));
+  Object.keys(gs.allPlayers).filter(id => id !== X.id && id !== O.id).forEach(id => io.to(id).emit('ttt:symbol', { symbol: null }));
+}
+
+function tttTournamentPublic(gs) {
+  return {
+    rounds: gs.rounds, allPlayers: gs.allPlayers,
+    currentRound: gs.currentRound, currentMatch: gs.currentMatch,
+    tournamentWinner: gs.tournamentWinner,
+    currentPlayerIds: gs.players ? [gs.players.X.id, gs.players.O.id] : [],
+  };
+}
+
+function startTTT(room) {
+  const players = [...room.players.values()].sort(() => Math.random() - 0.5);
+  const bestOf = room.settings?.bestOf ?? 0;
+
+  if (players.length >= 3) {
+    const allPlayers = {};
+    players.forEach(p => { allPlayers[p.id] = { id: p.id, name: p.name }; });
+    const rounds = buildTournamentRounds(players.map(p => p.id));
+    room.gameState = {
+      type: 'tictactoe', mode: 'tournament',
+      allPlayers, rounds, currentRound: 0, currentMatch: 0,
+      board: null, players: null, currentTurn: null,
+      winner: null, winLine: null, winnerSymbol: null, tournamentWinner: null,
+    };
+    io.to(room.code).emit('ttt:tournament_state', tttTournamentPublic(room.gameState));
+    addTimer(room, () => advanceTournament(room), 2000);
+  } else {
+    const X = players[0], O = players[1];
+    room.gameState = {
+      type: 'tictactoe', mode: 'classic',
+      board: Array(9).fill(null),
+      players: { X: { id: X.id, name: X.name }, O: { id: O.id, name: O.name } },
+      currentTurn: X.id,
+      winner: null, winLine: null, winnerSymbol: null,
+      scores: { [X.id]: 0, [O.id]: 0 },
+      gameCount: 1, bestOf, matchWinner: null,
+    };
+    io.to(room.code).emit('ttt:state', tttPublic(room.gameState));
+    io.to(X.id).emit('ttt:symbol', { symbol: 'X' });
+    io.to(O.id).emit('ttt:symbol', { symbol: 'O' });
+    players.filter(p => p.id !== X.id && p.id !== O.id).forEach(p => io.to(p.id).emit('ttt:symbol', { symbol: null }));
+  }
 }
 
 function tttMove(room, socket, index) {
   const gs = room.gameState;
-  if (gs.winner || gs.matchWinner || gs.currentTurn !== socket.id) return;
+  if (!gs.board || gs.winner || (gs.mode !== 'tournament' && gs.matchWinner) || gs.currentTurn !== socket.id) return;
   if (index < 0 || index > 8 || gs.board[index] !== null) return;
   const sym = gs.players.X.id === socket.id ? 'X' : gs.players.O.id === socket.id ? 'O' : null;
   if (!sym) return;
@@ -334,22 +455,35 @@ function tttMove(room, socket, index) {
   const win = tttWin(gs.board);
   if (win) {
     gs.winner = socket.id; gs.winnerSymbol = sym; gs.winLine = win;
-    gs.scores[socket.id] = (gs.scores[socket.id] || 0) + 1;
-    // Check match winner
-    if (gs.bestOf > 0) {
-      const needed = Math.ceil(gs.bestOf / 2);
-      if (gs.scores[socket.id] >= needed) gs.matchWinner = socket.id;
+    if (gs.mode === 'tournament') {
+      gs.rounds[gs.currentRound][gs.currentMatch].winner = socket.id;
+      io.to(room.code).emit('ttt:state', tttPublic(gs));
+      io.to(room.code).emit('ttt:tournament_state', tttTournamentPublic(gs));
+      addTimer(room, () => advanceTournament(room), 3000);
+    } else {
+      gs.scores[socket.id] = (gs.scores[socket.id] || 0) + 1;
+      if (gs.bestOf > 0) {
+        const needed = Math.ceil(gs.bestOf / 2);
+        if (gs.scores[socket.id] >= needed) gs.matchWinner = socket.id;
+      }
+      io.to(room.code).emit('ttt:state', tttPublic(gs));
     }
   } else if (gs.board.every(Boolean)) {
     gs.winner = 'draw';
+    io.to(room.code).emit('ttt:state', tttPublic(gs));
+    if (gs.mode === 'tournament') {
+      const { p1, p2 } = gs.rounds[gs.currentRound][gs.currentMatch];
+      addTimer(room, () => startTournamentMatch(room, p1, p2), 2500);
+    }
   } else {
     gs.currentTurn = gs.currentTurn === gs.players.X.id ? gs.players.O.id : gs.players.X.id;
+    io.to(room.code).emit('ttt:state', tttPublic(gs));
   }
-  io.to(room.code).emit('ttt:state', tttPublic(gs));
 }
 
 function tttNewGame(room) {
-  const gs = room.gameState; if (!gs || gs.matchWinner) return;
+  const gs = room.gameState;
+  if (!gs || gs.mode === 'tournament' || gs.matchWinner) return;
   const tmp = gs.players.X; gs.players.X = gs.players.O; gs.players.O = tmp;
   gs.board = Array(9).fill(null);
   gs.currentTurn = gs.players.X.id;
@@ -367,9 +501,13 @@ function tttWin(board) {
 }
 
 function tttPublic(gs) {
-  return { board: gs.board, currentTurn: gs.currentTurn, players: gs.players,
+  return {
+    mode: gs.mode || 'classic',
+    board: gs.board, currentTurn: gs.currentTurn, players: gs.players,
     winner: gs.winner, winLine: gs.winLine, winnerSymbol: gs.winnerSymbol,
-    scores: gs.scores, gameCount: gs.gameCount, bestOf: gs.bestOf, matchWinner: gs.matchWinner };
+    scores: gs.scores || {}, gameCount: gs.gameCount || 1,
+    bestOf: gs.bestOf || 0, matchWinner: gs.matchWinner || null,
+  };
 }
 
 // ─────────────────────── KILLER DOCTOR ───────────────────────
@@ -436,6 +574,7 @@ function kdResolveNight(room) {
   io.to(room.code).emit('kd:night_result', {
     message: msg,
     died: died ? { id: died, name: gs.playerData[died].name } : null,
+    saved,
     livingPlayers: kdAlive(gs).map(p => ({ id: p.id, name: p.name })),
     deadPlayers: kdDead(gs).map(p => ({ id: p.id, name: p.name })),
   });

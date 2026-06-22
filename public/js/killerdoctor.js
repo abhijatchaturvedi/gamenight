@@ -2,12 +2,35 @@ const KillerDoctor = (() => {
   let myRole = null;
   let roleVisible = true;
   let timerInterval = null;
+  let playerCharMap = {};
 
   const ROLE_INFO = {
     killer:   { icon: '🔪', color: '#ef4444', desc: 'Kill one player each night. Stay hidden.' },
     doctor:   { icon: '💉', color: '#10b981', desc: 'Save one player each night. Protect the village.' },
     villager: { icon: '🧑', color: '#94a3b8', desc: 'Find and vote out the Killer before it\'s too late.' },
   };
+
+  const PLAYER_CHARACTERS = [
+    { emoji: '🧙', name: 'Wizard' },
+    { emoji: '⚔️', name: 'Warrior' },
+    { emoji: '🏹', name: 'Archer' },
+    { emoji: '🛡️', name: 'Knight' },
+    { emoji: '🔮', name: 'Seer' },
+    { emoji: '🗡️', name: 'Rogue' },
+    { emoji: '🦊', name: 'Fox' },
+    { emoji: '🐺', name: 'Wolf' },
+    { emoji: '🦅', name: 'Eagle' },
+    { emoji: '🧝', name: 'Elf' },
+    { emoji: '🤺', name: 'Duelist' },
+    { emoji: '🧛', name: 'Vampire' },
+    { emoji: '🧟', name: 'Wanderer' },
+    { emoji: '🧜', name: 'Mystic' },
+    { emoji: '🎭', name: 'Jester' },
+  ];
+
+  function getPlayerChar(id) {
+    return PLAYER_CHARACTERS[playerCharMap[id] ?? 0];
+  }
 
   function init() {
     document.getElementById('kd-toggle-role').addEventListener('click', toggleRole);
@@ -18,6 +41,9 @@ const KillerDoctor = (() => {
     document.getElementById('kd-chat-send').addEventListener('click', sendChat);
     document.getElementById('kd-btn-again').addEventListener('click', () => App.socket.emit('game:restart'));
     document.getElementById('kd-btn-lobby').addEventListener('click', () => App.socket.emit('game:back_to_lobby'));
+    document.getElementById('kd-btn-exit').addEventListener('click', () => {
+      if (confirm('Exit the game? You will leave the room.')) location.reload();
+    });
 
     App.socket.on('kd:night_start', onNightStart);
     App.socket.on('kd:killer_action', onKillerAction);
@@ -60,14 +86,17 @@ const KillerDoctor = (() => {
     roleVisible = !roleVisible;
     const card = document.getElementById('kd-role-card');
     const roleNameEl = document.getElementById('kd-role-name');
+    const charEl = document.getElementById('kd-role-character');
     const btn = document.getElementById('kd-toggle-role');
     if (roleVisible) {
       const info = ROLE_INFO[myRole] || {};
       roleNameEl.textContent = `${info.icon || ''} ${myRole?.toUpperCase() || '—'}`;
+      charEl.classList.remove('hidden');
       card.classList.remove('hidden-role');
       btn.textContent = 'Hide Role';
     } else {
       roleNameEl.textContent = '🂠 Hidden';
+      charEl.classList.add('hidden');
       card.classList.add('hidden-role');
       btn.textContent = 'Show Role';
     }
@@ -76,13 +105,16 @@ const KillerDoctor = (() => {
   function setRole(role, alive = true) {
     myRole = role;
     const info = ROLE_INFO[role] || {};
+    const char = getPlayerChar(App.myId);
     const card = document.getElementById('kd-role-card');
     card.dataset.role = role;
     document.getElementById('kd-role-name').textContent = `${info.icon || ''} ${role?.toUpperCase() || '—'}`;
     document.getElementById('kd-role-desc').textContent = info.desc || '';
+    document.getElementById('kd-role-character').textContent = `${char.emoji} ${char.name}`;
     document.getElementById('kd-you-status').textContent = alive ? '🟢 Alive' : '💀 Dead';
     roleVisible = true;
     card.classList.remove('hidden-role');
+    document.getElementById('kd-role-character').classList.remove('hidden');
     document.getElementById('kd-toggle-role').textContent = 'Hide Role';
   }
 
@@ -93,10 +125,11 @@ const KillerDoctor = (() => {
     all.forEach(p => {
       const item = document.createElement('div');
       item.className = 'kd-player-item' + (p.alive ? '' : ' dead');
-      const av = document.createElement('div');
-      av.className = 'mini-avatar';
-      av.style.background = avatarColor(p.name);
-      av.textContent = p.name.slice(0,2).toUpperCase();
+      const char = getPlayerChar(p.id);
+      const charIcon = document.createElement('div');
+      charIcon.className = 'player-char-icon';
+      charIcon.textContent = char.emoji;
+      charIcon.title = char.name;
       const nameWrap = document.createElement('div');
       nameWrap.className = 'player-name-wrap';
       nameWrap.textContent = p.name;
@@ -105,7 +138,7 @@ const KillerDoctor = (() => {
         tag.className = 'you-tag'; tag.textContent = ' (you)';
         nameWrap.appendChild(tag);
       }
-      item.appendChild(av);
+      item.appendChild(charIcon);
       item.appendChild(nameWrap);
       if (!p.alive) { const skull = document.createElement('span'); skull.textContent = '💀'; item.appendChild(skull); }
       list.appendChild(item);
@@ -120,7 +153,65 @@ const KillerDoctor = (() => {
     hist.insertBefore(item, hist.firstChild);
   }
 
+  const ANIM_CONFIG = {
+    kill:  { emojis: ['🩸','💀','🔪','💔','🩸'], count: 20, dir: 'fall',  bg: 'rgba(180,20,20,0.6)',  icon: '💀', text: 'The Killer Strikes!' },
+    save:  { emojis: ['✨','💚','⭐','💫','🌟'], count: 18, dir: 'rise',  bg: 'rgba(10,140,80,0.55)', icon: '💚', text: 'Doctor to the Rescue!' },
+    peace: { emojis: ['⭐','🌟','💤','🌙'],      count: 10, dir: 'rise',  bg: 'rgba(40,40,120,0.5)',  icon: '🌙', text: 'A Peaceful Night…' },
+  };
+
+  function showNightAnimation(type) {
+    const cfg = ANIM_CONFIG[type] || ANIM_CONFIG.peace;
+    const overlay = document.createElement('div');
+    overlay.className = `kd-anim-overlay kd-anim-${type}`;
+    overlay.style.background = cfg.bg;
+
+    // Particle rain / rise
+    const particles = document.createElement('div');
+    particles.className = 'kd-particles';
+    for (let i = 0; i < cfg.count; i++) {
+      const p = document.createElement('span');
+      p.className = `kd-particle kd-particle-${cfg.dir}`;
+      p.textContent = cfg.emojis[Math.floor(Math.random() * cfg.emojis.length)];
+      p.style.cssText = [
+        `left:${Math.random() * 100}%`,
+        `animation-delay:${(Math.random() * 1.8).toFixed(2)}s`,
+        `animation-duration:${(1.4 + Math.random() * 1.6).toFixed(2)}s`,
+        `font-size:${(0.9 + Math.random() * 1.6).toFixed(1)}rem`,
+        `opacity:${(0.7 + Math.random() * 0.3).toFixed(2)}`,
+      ].join(';');
+      particles.appendChild(p);
+    }
+
+    const main = document.createElement('div');
+    main.className = 'kd-anim-main';
+
+    const icon = document.createElement('div');
+    icon.className = 'kd-anim-icon';
+    icon.textContent = cfg.icon;
+
+    const text = document.createElement('div');
+    text.className = 'kd-anim-text';
+    text.textContent = cfg.text;
+
+    main.appendChild(icon);
+    main.appendChild(text);
+    overlay.appendChild(particles);
+    overlay.appendChild(main);
+    document.getElementById('view-killerdoctor').appendChild(overlay);
+
+    // Fade out then remove
+    setTimeout(() => {
+      overlay.style.transition = 'opacity 0.4s ease';
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.remove(), 400);
+    }, 2400);
+  }
+
   function onRoleAssigned({ role, allPlayers }) {
+    playerCharMap = {};
+    allPlayers.forEach((p, i) => {
+      playerCharMap[p.id] = i % PLAYER_CHARACTERS.length;
+    });
     setRole(role);
     renderPlayerList(allPlayers, []);
     setPhase('reveal');
@@ -130,7 +221,6 @@ const KillerDoctor = (() => {
 
   function onReconnect({ role, phase, alive }) {
     setRole(role, alive);
-    // Show appropriate phase — simplified reconnect shows current state
     setPhase(phase === 'night' ? 'night' :
              phase === 'night_resolution' ? 'night-result' :
              phase === 'day_discussion' ? 'discussion' :
@@ -150,6 +240,21 @@ const KillerDoctor = (() => {
     startTimer('kd-night-timer', 45);
   }
 
+  function makeTargetBtn(t, onClick) {
+    const btn = document.createElement('button');
+    btn.className = 'target-btn';
+    const char = getPlayerChar(t.id);
+    const charEl = document.createElement('div');
+    charEl.className = 'target-char';
+    charEl.textContent = char.emoji;
+    const nameEl = document.createElement('span');
+    nameEl.textContent = t.name;
+    btn.appendChild(charEl);
+    btn.appendChild(nameEl);
+    btn.addEventListener('click', onClick);
+    return btn;
+  }
+
   function onKillerAction({ targets }) {
     const panel = document.getElementById('kd-night-action');
     document.getElementById('kd-action-title').textContent = '🔪 Choose your victim';
@@ -158,15 +263,7 @@ const KillerDoctor = (() => {
     const grid = document.getElementById('kd-action-targets');
     grid.innerHTML = '';
     targets.forEach(t => {
-      const btn = document.createElement('button');
-      btn.className = 'target-btn';
-      const av = document.createElement('div');
-      av.className = 'mini-avatar';
-      av.style.cssText = `width:32px;height:32px;background:${avatarColor(t.name)};border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#fff`;
-      av.textContent = t.name.slice(0,2).toUpperCase();
-      btn.appendChild(av);
-      btn.appendChild(document.createTextNode(t.name));
-      btn.addEventListener('click', () => {
+      const btn = makeTargetBtn(t, () => {
         grid.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         App.socket.emit('game:action', { action: 'night_kill', targetId: t.id });
@@ -184,15 +281,8 @@ const KillerDoctor = (() => {
     const grid = document.getElementById('kd-action-targets');
     grid.innerHTML = '';
     targets.forEach(t => {
-      const btn = document.createElement('button');
-      btn.className = 'target-btn';
-      const av = document.createElement('div');
-      av.className = 'mini-avatar';
-      av.style.cssText = `width:32px;height:32px;background:${avatarColor(t.name)};border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#fff`;
-      av.textContent = t.name.slice(0,2).toUpperCase();
-      btn.appendChild(av);
-      btn.appendChild(document.createTextNode(t.name + (t.id === App.myId ? ' (You)' : '')));
-      btn.addEventListener('click', () => {
+      const isMe = t.id === App.myId;
+      const btn = makeTargetBtn({ ...t, name: t.name + (isMe ? ' (You)' : '') }, () => {
         grid.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         App.socket.emit('game:action', { action: 'night_save', targetId: t.id });
@@ -208,15 +298,34 @@ const KillerDoctor = (() => {
     document.querySelectorAll('#kd-action-targets .target-btn').forEach(b => b.disabled = true);
   }
 
-  function onNightResult({ message, died, livingPlayers, deadPlayers }) {
+  function onNightResult({ message, died, saved, livingPlayers, deadPlayers }) {
     renderPlayerList(livingPlayers, deadPlayers);
     if (died) {
       addHistory(`${died.name} died in the night.`);
       document.getElementById('kd-you-status').textContent = died.id === App.myId ? '💀 Dead' : document.getElementById('kd-you-status').textContent;
+      showNightAnimation('kill');
+    } else if (saved) {
+      addHistory('Doctor saved someone — nobody died.');
+      showNightAnimation('save');
     } else {
-      addHistory('Nobody died in the night.');
+      addHistory('A peaceful night passed.');
+      showNightAnimation('peace');
     }
     document.getElementById('kd-night-msg').textContent = message;
+
+    const victimEl = document.getElementById('kd-night-victim');
+    if (died) {
+      const char = getPlayerChar(died.id);
+      victimEl.innerHTML = `<span class="victim-char">${char.emoji}</span><span class="victim-name">${died.name} has fallen</span>`;
+      victimEl.className = 'night-victim-display victim-dead';
+    } else if (saved) {
+      victimEl.innerHTML = `<span class="victim-char">💚</span><span class="victim-name">Protected by the Doctor</span>`;
+      victimEl.className = 'night-victim-display victim-saved';
+    } else {
+      victimEl.innerHTML = '';
+      victimEl.className = 'night-victim-display';
+    }
+
     setPhase('night-result');
   }
 
@@ -242,12 +351,14 @@ const KillerDoctor = (() => {
       const btn = document.createElement('button');
       btn.className = 'vote-btn';
       btn.disabled = !isAlive;
-      const av = document.createElement('div');
-      av.className = 'mini-avatar';
-      av.style.cssText = `width:40px;height:40px;background:${avatarColor(t.name)};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700;color:#fff`;
-      av.textContent = t.name.slice(0,2).toUpperCase();
-      btn.appendChild(av);
-      btn.appendChild(document.createTextNode(t.name));
+      const char = getPlayerChar(t.id);
+      const charEl = document.createElement('div');
+      charEl.className = 'vote-char';
+      charEl.textContent = char.emoji;
+      const nameEl = document.createElement('div');
+      nameEl.textContent = t.name;
+      btn.appendChild(charEl);
+      btn.appendChild(nameEl);
       btn.addEventListener('click', () => {
         if (!isAlive) return;
         grid.querySelectorAll('.vote-btn').forEach(b => { b.classList.remove('voted'); b.disabled = true; });
@@ -282,7 +393,8 @@ const KillerDoctor = (() => {
       }
       const reveal = document.getElementById('kd-elim-reveal');
       reveal.className = `role-reveal-card ${eliminated.role}`;
-      reveal.innerHTML = `<div class="reveal-role">${ROLE_INFO[eliminated.role]?.icon || ''} ${eliminated.role.toUpperCase()}</div><div>${eliminated.name} was the ${eliminated.role}!</div>`;
+      const char = getPlayerChar(eliminated.id);
+      reveal.innerHTML = `<div class="reveal-char">${char.emoji}</div><div class="reveal-role">${ROLE_INFO[eliminated.role]?.icon || ''} ${eliminated.role.toUpperCase()}</div><div>${eliminated.name} was the ${eliminated.role}!</div>`;
       reveal.classList.remove('hidden');
       document.getElementById('kd-elim-icon').textContent = eliminated.role === 'killer' ? '⚰️' : '😢';
       document.getElementById('kd-elim-title').textContent = eliminated.role === 'killer' ? 'Killer Found!' : 'Innocent Eliminated';
@@ -298,7 +410,8 @@ const KillerDoctor = (() => {
     (voteDetails || []).sort((a,b) => b.votes - a.votes).forEach(v => {
       const d = document.createElement('div');
       d.className = 'vote-detail-item';
-      d.innerHTML = `${v.name}: <span class="vote-count">${v.votes} vote${v.votes !== 1 ? 's' : ''}</span>`;
+      const char = getPlayerChar(v.id);
+      d.innerHTML = `${char.emoji} ${v.name}: <span class="vote-count">${v.votes} vote${v.votes !== 1 ? 's' : ''}</span>`;
       detail.appendChild(d);
     });
 
@@ -320,9 +433,10 @@ const KillerDoctor = (() => {
     grid.innerHTML = '';
     allPlayers.forEach(p => {
       const info = ROLE_INFO[p.role] || {};
+      const char = getPlayerChar(p.id);
       const card = document.createElement('div');
       card.className = 'final-player-card' + (p.alive ? '' : ' dead');
-      card.innerHTML = `<div class="fp-name">${p.name}${p.id === App.myId ? ' (you)' : ''}</div><div class="fp-role ${p.role}">${info.icon || ''} ${p.role}</div><div style="font-size:.75rem;color:var(--muted)">${p.alive ? 'Survived' : 'Eliminated'}</div>`;
+      card.innerHTML = `<div class="fp-char">${char.emoji}</div><div class="fp-name">${p.name}${p.id === App.myId ? ' (you)' : ''}</div><div class="fp-role ${p.role}">${info.icon || ''} ${p.role}</div><div style="font-size:.75rem;color:var(--muted)">${p.alive ? 'Survived' : 'Eliminated'}</div>`;
       grid.appendChild(card);
     });
 

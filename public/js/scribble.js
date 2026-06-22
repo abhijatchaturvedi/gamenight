@@ -22,6 +22,9 @@ const Scribble = (() => {
     document.getElementById('scb-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
     document.getElementById('scb-btn-again').addEventListener('click', () => App.socket.emit('game:restart'));
     document.getElementById('scb-btn-lobby').addEventListener('click', () => App.socket.emit('game:back_to_lobby'));
+    document.getElementById('scb-btn-exit').addEventListener('click', () => {
+      if (confirm('Exit the game? You will leave the room.')) location.reload();
+    });
 
     App.socket.on('scribble:turn_start', onTurnStart);
     App.socket.on('scribble:choose_word', onChooseWord);

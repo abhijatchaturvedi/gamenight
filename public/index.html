@@ -103,7 +103,14 @@
   <div class="ttt-container">
     <div class="ttt-header">
       <h2>Tic Tac Toe</h2>
-      <button class="btn-ghost" id="ttt-leave">← Leave</button>
+      <button class="btn-ghost btn-exit" id="ttt-leave">🚪 Exit</button>
+    </div>
+
+    <!-- Tournament info (3+ players) -->
+    <div id="ttt-tournament-info" class="ttt-tournament-info hidden">
+      <div class="ttt-tournament-badge">🏆 Tournament</div>
+      <div id="ttt-match-info" class="ttt-match-info">Setting up…</div>
+      <div id="ttt-bracket" class="ttt-bracket"></div>
     </div>
 
     <div class="ttt-scoreboard">
@@ -155,8 +162,10 @@
 
     <!-- Side panel -->
     <aside class="kd-sidebar">
+      <button class="btn-exit btn-exit-kd" id="kd-btn-exit" title="Exit Game">🚪 Exit</button>
       <div class="kd-role-card" id="kd-role-card">
         <div class="role-label">Your Role</div>
+        <div id="kd-role-character" class="role-character"></div>
         <div id="kd-role-name" class="role-name">—</div>
         <div id="kd-role-desc" class="role-desc"></div>
         <button id="kd-toggle-role" class="btn-ghost btn-sm">Hide Role</button>
@@ -214,6 +223,7 @@
           <div class="phase-icon anim-pop">🌅</div>
           <h2>Dawn Breaks</h2>
           <p id="kd-night-msg" class="result-message"></p>
+          <div id="kd-night-victim" class="night-victim-display"></div>
         </div>
       </div>
 
@@ -311,6 +321,7 @@
         <div class="timer-badge">
           <div id="scb-timer" class="timer-display">1:20</div>
         </div>
+        <button class="btn-exit btn-sm" id="scb-btn-exit" title="Exit Game">🚪</button>
       </div>
 
       <!-- Word chooser (drawer only) -->
