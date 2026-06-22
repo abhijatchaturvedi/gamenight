@@ -2,6 +2,7 @@ const KillerDoctor = (() => {
   let myRole = null;
   let roleVisible = true;
   let timerInterval = null;
+  let tensionShown = false;
 
   const ROLE_INFO = {
     killer:   { icon: '🔪', color: '#ef4444', desc: 'Kill one player each night. Stay hidden.' },
@@ -102,6 +103,12 @@ const KillerDoctor = (() => {
   function renderPlayerList(living, dead) {
     const list = document.getElementById('kd-player-list');
     list.innerHTML = '';
+    const aliveCount = (living || []).length;
+    list.classList.toggle('kd-tension', aliveCount === 3);
+    if (aliveCount === 3 && !tensionShown && myRole !== null) {
+      tensionShown = true;
+      toast('⚠️ Final 3 players — Killer can now win!');
+    }
     const all = [...(living || []).map(p => ({...p, alive: true})), ...(dead || []).map(p => ({...p, alive: false}))];
     all.forEach(p => {
       const item = document.createElement('div');
@@ -135,9 +142,15 @@ const KillerDoctor = (() => {
   }
 
   const ANIM_CONFIG = {
-    kill:  { emojis: ['🩸','💀','🔪','💔','🩸'], count: 20, dir: 'fall',  bg: 'rgba(180,20,20,0.6)',  icon: '💀', text: 'The Killer Strikes!' },
-    save:  { emojis: ['✨','💚','⭐','💫','🌟'], count: 18, dir: 'rise',  bg: 'rgba(10,140,80,0.55)', icon: '💚', text: 'Doctor to the Rescue!' },
-    peace: { emojis: ['⭐','🌟','💤','🌙'],      count: 10, dir: 'rise',  bg: 'rgba(40,40,120,0.5)',  icon: '🌙', text: 'A Peaceful Night…' },
+    kill:          { emojis: ['🩸','💀','🔪','💔','🩸'],          count: 20, dir: 'fall', bg: 'rgba(180,20,20,0.6)',    icon: '💀', text: 'The Killer Strikes!',   dur: 2400 },
+    save:          { emojis: ['✨','💚','⭐','💫','🌟'],          count: 18, dir: 'rise', bg: 'rgba(10,140,80,0.55)',  icon: '💚', text: 'Doctor to the Rescue!', dur: 2400 },
+    peace:         { emojis: ['⭐','🌟','💤','🌙'],               count: 10, dir: 'rise', bg: 'rgba(40,40,120,0.5)',   icon: '🌙', text: 'A Peaceful Night…',      dur: 2400 },
+    night:         { emojis: ['🌙','⭐','✨','💫','🌟'],          count: 16, dir: 'fall', bg: 'rgba(8,8,48,0.72)',     icon: '🌙', text: 'Night Falls…',           dur: 2000 },
+    day:           { emojis: ['☀️','🌸','🐦','✨','🌻'],         count: 14, dir: 'rise', bg: 'rgba(255,175,25,0.38)', icon: '🌅', text: 'A New Day Dawns',        dur: 2000 },
+    killer_caught: { emojis: ['🎉','🎊','🏆','⚔️','✨','🌟'],    count: 28, dir: 'rise', bg: 'rgba(20,100,220,0.55)', icon: '🎉', text: 'Killer Caught!',         dur: 2800 },
+    innocent_out:  { emojis: ['😢','💔','🪦','😭','🕊️'],         count: 15, dir: 'fall', bg: 'rgba(70,50,90,0.6)',    icon: '😢', text: 'An Innocent Falls…',     dur: 2200 },
+    villagers_win: { emojis: ['🎉','🎊','🌟','🏆','🎈','✨'],    count: 35, dir: 'rise', bg: 'rgba(16,120,70,0.55)',  icon: '🏆', text: 'Villagers Win!',         dur: 3500 },
+    killer_wins:   { emojis: ['💀','🔪','😈','🌑','👁️','🩸'],    count: 30, dir: 'fall', bg: 'rgba(90,0,0,0.72)',     icon: '😈', text: 'Killer Wins!',           dur: 3500 },
   };
 
   function showNightAnimation(type) {
@@ -185,15 +198,32 @@ const KillerDoctor = (() => {
       overlay.style.transition = 'opacity 0.4s ease';
       overlay.style.opacity = '0';
       setTimeout(() => overlay.remove(), 400);
-    }, 2400);
+    }, cfg.dur || 2400);
+  }
+
+  function showVoteDropAnim(btn) {
+    const rect = btn.getBoundingClientRect();
+    const el = document.createElement('span');
+    el.className = 'kd-vote-drop';
+    el.textContent = '🗳️';
+    el.style.left = `${rect.left + rect.width / 2}px`;
+    el.style.top  = `${rect.top}px`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 900);
   }
 
   function onRoleAssigned({ role, allPlayers }) {
+    tensionShown = false;
     setRole(role);
     renderPlayerList(allPlayers, []);
     setPhase('reveal');
     document.getElementById('kd-chat-messages').innerHTML = '';
     document.getElementById('kd-history').innerHTML = '';
+    // Card flip reveal animation
+    const card = document.getElementById('kd-role-card');
+    card.classList.remove('kd-card-flip');
+    void card.offsetWidth;
+    card.classList.add('kd-card-flip');
   }
 
   function onReconnect({ role, phase, alive }) {
@@ -215,6 +245,7 @@ const KillerDoctor = (() => {
     document.getElementById('kd-night-timer').classList.remove('hidden');
     setPhase('night');
     startTimer('kd-night-timer', 45);
+    showNightAnimation('night');
   }
 
   function makeTargetBtn(t, onClick) {
@@ -313,6 +344,7 @@ const KillerDoctor = (() => {
     document.getElementById('kd-chat-send').disabled = !isAlive;
     setPhase('discussion');
     startTimer('kd-day-timer', duration);
+    showNightAnimation('day');
   }
 
   function onVotingStart({ duration, livingPlayers, deadPlayers }) {
@@ -335,6 +367,7 @@ const KillerDoctor = (() => {
       btn.appendChild(nameEl);
       btn.addEventListener('click', () => {
         if (!isAlive) return;
+        showVoteDropAnim(btn);
         grid.querySelectorAll('.vote-btn').forEach(b => { b.classList.remove('voted'); b.disabled = true; });
         btn.classList.add('voted');
         App.socket.emit('game:action', { action: 'vote', targetId: t.id });
@@ -361,6 +394,7 @@ const KillerDoctor = (() => {
     document.getElementById('kd-elim-msg').textContent = message;
 
     if (eliminated) {
+      showNightAnimation(eliminated.role === 'killer' ? 'killer_caught' : 'innocent_out');
       addHistory(`${eliminated.name} was voted out (${eliminated.role}).`);
       if (eliminated.id === App.myId) {
         document.getElementById('kd-you-status').textContent = '💀 Eliminated';
@@ -400,6 +434,8 @@ const KillerDoctor = (() => {
     document.getElementById('kd-win-title').textContent = isVillagers ? 'Villagers Win!' : 'Killer Wins!';
     document.getElementById('kd-win-reason').textContent = reason;
     document.getElementById('kd-btn-again').style.display = App.isHost ? 'inline-block' : 'none';
+    setPhase('gameover');
+    showNightAnimation(isVillagers ? 'villagers_win' : 'killer_wins');
 
     const grid = document.getElementById('kd-final-players');
     grid.innerHTML = '';
@@ -418,8 +454,6 @@ const KillerDoctor = (() => {
       d.textContent = h.reason === 'vote' ? `Round ${h.round}: ${h.name} was voted out (${h.role})` : `Night ${h.round}: ${h.name} was killed`;
       hist.appendChild(d);
     });
-
-    setPhase('gameover');
   }
 
   function onChatMessage({ playerName, message }) {
