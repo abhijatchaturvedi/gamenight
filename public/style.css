@@ -116,8 +116,8 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .avatar-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.65); }
 .avatar-modal-box {
   position: relative; background: var(--bg); border: 1px solid var(--border);
-  border-radius: 16px; padding: 20px; width: 90%; max-width: 380px;
-  max-height: 80vh; display: flex; flex-direction: column; gap: 14px;
+  border-radius: 16px; padding: 20px; width: 95%; max-width: 560px;
+  max-height: 85vh; display: flex; flex-direction: column; gap: 14px;
   box-shadow: 0 20px 60px rgba(0,0,0,.5);
 }
 .avatar-modal-header {
@@ -131,10 +131,11 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 }
 .avatar-modal-close:hover { color: var(--text); background: var(--card); }
 .avatar-modal .avatar-grid {
-  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
-  overflow-y: auto; max-height: calc(80vh - 80px); padding-right: 4px;
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px;
+  overflow-y: auto; max-height: calc(85vh - 80px); padding-right: 4px;
   scrollbar-width: thin; scrollbar-color: var(--border) transparent;
 }
+.avatar-modal .avatar-opt { font-size: 1.6rem; padding: 8px; }
 .avatar-grid::-webkit-scrollbar { width: 5px; }
 .avatar-grid::-webkit-scrollbar-track { background: transparent; }
 .avatar-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
