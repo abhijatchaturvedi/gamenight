@@ -18,6 +18,11 @@ const KillerDoctor = (() => {
   function init() {
     document.getElementById('kd-toggle-role').addEventListener('click', toggleRole);
 
+    document.getElementById('kd-villager-awake').addEventListener('click', function() {
+      this.textContent = '✓ Confirmed';
+      this.disabled = true;
+    });
+
     document.getElementById('kd-chat-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') sendChat();
     });
@@ -289,7 +294,16 @@ const KillerDoctor = (() => {
     addHistory(`Night ${round} began.`);
     document.getElementById('kd-night-title').textContent = `Night ${round}`;
     document.getElementById('kd-night-subtitle').textContent = 'The village sleeps…';
-    document.getElementById('kd-night-action').classList.add('hidden');
+    const nightAction = document.getElementById('kd-night-action');
+    nightAction.classList.remove('hidden');
+    document.getElementById('kd-action-title').textContent = '🌙 Night Phase';
+    document.getElementById('kd-action-desc').textContent = 'Stay quiet and don\'t react…';
+    document.getElementById('kd-action-targets').innerHTML = '';
+    document.getElementById('kd-action-done').classList.add('hidden');
+    const awakeBtn = document.getElementById('kd-villager-awake');
+    awakeBtn.textContent = '👁️ I\'m awake';
+    awakeBtn.disabled = false;
+    awakeBtn.classList.remove('hidden');
     document.getElementById('kd-night-timer').classList.remove('hidden');
     setPhase('night');
     startTimer('kd-night-timer', 45);
@@ -313,6 +327,7 @@ const KillerDoctor = (() => {
 
   function onKillerAction({ targets }) {
     const panel = document.getElementById('kd-night-action');
+    document.getElementById('kd-villager-awake').classList.add('hidden');
     document.getElementById('kd-action-title').textContent = '🔪 Choose your victim';
     document.getElementById('kd-action-desc').textContent = 'Select a player to eliminate tonight.';
     document.getElementById('kd-action-done').classList.add('hidden');
@@ -331,6 +346,7 @@ const KillerDoctor = (() => {
 
   function onDoctorAction({ targets }) {
     const panel = document.getElementById('kd-night-action');
+    document.getElementById('kd-villager-awake').classList.add('hidden');
     document.getElementById('kd-action-title').textContent = '💉 Choose who to save';
     document.getElementById('kd-action-desc').textContent = 'Select a player to protect tonight. You may save yourself.';
     document.getElementById('kd-action-done').classList.add('hidden');
