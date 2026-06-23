@@ -21,7 +21,7 @@ const AVATARS = [
   { emoji: '🐬', name: 'Dolphin' },  { emoji: '🦦', name: 'Otter' },
   { emoji: '🐘', name: 'Elephant' }, { emoji: '🐒', name: 'Monkey' },
   { emoji: '🦒', name: 'Giraffe' },  { emoji: '🪰', name: 'Fly' },
-  { emoji: '🧪', name: 'Tester' },
+  { emoji: '🧪', name: 'Tester' },   { emoji: '🎼', name: 'Conductor' },
 ];
 
 // ═══════════════════ GLOBAL STATE ═══════════════════
@@ -303,6 +303,7 @@ const NAME_AVATARS = {
   'suryansh': 16,  // 🐉 Dragon
   'garima': 42,    // 🧪 Tester
   'priyanshi': 21, // 🦝 Raccoon
+  'abhijat': 43,   // 🎼 Conductor
 };
 
 function selectAvatar(idx) {
