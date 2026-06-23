@@ -22,6 +22,7 @@ const AVATARS = [
   { emoji: '🐘', name: 'Elephant' }, { emoji: '🐒', name: 'Monkey' },
   { emoji: '🦒', name: 'Giraffe' },  { emoji: '🪰', name: 'Fly' },
   { emoji: '🧪', name: 'Tester' },   { emoji: '🎼', name: 'Conductor' },
+  { emoji: '🦗', name: 'Cricket' },
 ];
 
 // ═══════════════════ GLOBAL STATE ═══════════════════
@@ -294,6 +295,8 @@ const NAME_AVATARS = {
   'abhijat': 11,   // 🧛 Vampire
   'vikas': 6,      // 🦊 Fox
   'pranav': 40,    // 🦒 Giraffe
+  'devaansh': 44,  // 🦗 Cricket
+  'garima': 19,    // 🦄 Unicorn
   'harshit': 37,   // 🦦 Otter
   'deepak': 7,     // 🐺 Wolf
   'abhishek': 31,  // 🤖 Robot
