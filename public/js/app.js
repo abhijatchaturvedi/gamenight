@@ -405,9 +405,8 @@ function initHome() {
   const urlCode = new URLSearchParams(window.location.search).get('code');
   if (urlCode) {
     document.getElementById('inp-code').value = urlCode.toUpperCase();
-    document.getElementById('btn-create').disabled = true;
-    document.getElementById('btn-create').closest('.home-card').classList.add('home-card-disabled');
-    document.querySelector('.home-or').classList.add('hidden');
+    document.getElementById('btn-create').closest('.home-card').remove();
+    document.querySelector('.home-or').remove();
   }
 
   document.getElementById('inp-name').addEventListener('input', () => {
