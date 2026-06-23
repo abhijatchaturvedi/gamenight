@@ -409,8 +409,19 @@ function initHome() {
     document.querySelector('.home-or').remove();
   }
 
+  const savedName = localStorage.getItem('gn_name') || '';
+  if (savedName) {
+    const inp = document.getElementById('inp-name');
+    inp.value = savedName;
+    const key = savedName.toLowerCase();
+    if (NAME_AVATARS[key] !== undefined) selectAvatar(NAME_AVATARS[key]);
+    updateAvatarAvailability();
+  }
+
   document.getElementById('inp-name').addEventListener('input', () => {
-    const key = document.getElementById('inp-name').value.trim().toLowerCase();
+    const val = document.getElementById('inp-name').value.trim();
+    localStorage.setItem('gn_name', val);
+    const key = val.toLowerCase();
     if (NAME_AVATARS[key] !== undefined) {
       selectAvatar(NAME_AVATARS[key]);
     } else {
