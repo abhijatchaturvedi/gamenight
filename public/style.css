@@ -86,6 +86,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 }
 .game-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(124,58,237,.25); }
 .game-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,58,237,.3); }
+.game-card.game-card-locked { pointer-events: none; cursor: default; }
 .game-icon { font-size: 2.2rem; margin-bottom: 10px; }
 .game-card h3 { font-size: 1rem; margin-bottom: 6px; }
 .game-card p { color: var(--muted); font-size: 0.8rem; margin-bottom: 10px; }

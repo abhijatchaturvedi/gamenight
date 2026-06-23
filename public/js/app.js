@@ -402,11 +402,23 @@ function initAvatarPicker() {
 
 // ═══════════════════ HOME SCREEN ═══════════════════
 function initHome() {
-  const urlCode = new URLSearchParams(window.location.search).get('code');
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlCode = urlParams.get('code');
+  const urlGame = urlParams.get('game');
   if (urlCode) {
     document.getElementById('inp-code').value = urlCode.toUpperCase();
     document.getElementById('btn-create').closest('.home-card').remove();
     document.querySelector('.home-or').remove();
+  }
+  if (urlGame) {
+    document.querySelectorAll('.game-card').forEach(card => {
+      if (card.dataset.game !== urlGame) card.remove();
+    });
+    const activeCard = document.querySelector(`.game-card[data-game="${urlGame}"]`);
+    if (activeCard) {
+      activeCard.classList.add('selected', 'game-card-locked');
+      document.querySelector('.game-selector h2').textContent = 'Joining game';
+    }
   }
 
   const savedName = localStorage.getItem('gn_name') || '';
@@ -496,7 +508,7 @@ function initLobby() {
   });
 
   document.getElementById('btn-share').addEventListener('click', () => {
-    const url = `${window.location.origin}${window.location.pathname}?code=${App.roomCode}`;
+    const url = `${window.location.origin}${window.location.pathname}?code=${App.roomCode}&game=${App.gameType}`;
     copyText(url, 'Invite link copied!');
   });
 
