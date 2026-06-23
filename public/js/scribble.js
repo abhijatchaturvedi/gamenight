@@ -478,6 +478,7 @@ const Scribble = (() => {
       scoreList.appendChild(row);
     });
     document.getElementById('scb-btn-again').style.display = App.isHost ? 'inline-block' : 'none';
+    document.getElementById('scb-btn-lobby').style.display = App.isHost ? 'inline-block' : 'none';
     overlay.classList.remove('hidden');
   }
 
