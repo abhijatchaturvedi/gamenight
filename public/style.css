@@ -116,9 +116,9 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .avatar-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.65); }
 .avatar-modal-box {
   position: relative; background: var(--bg); border: 1px solid var(--border);
-  border-radius: 16px; padding: 24px; width: 98%; max-width: 720px;
-  max-height: 92vh; display: flex; flex-direction: column; gap: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  border-radius: 16px; padding: 16px; width: 98%; max-width: 720px;
+  max-height: 92vh; display: flex; flex-direction: column; gap: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5); overflow-x: hidden;
 }
 .avatar-modal-header {
   display: flex; justify-content: space-between; align-items: center;
@@ -131,11 +131,11 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 }
 .avatar-modal-close:hover { color: var(--text); background: var(--card); }
 .avatar-modal .avatar-grid {
-  display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px;
-  overflow-y: auto; max-height: calc(92vh - 90px); padding-right: 4px;
+  display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px;
+  overflow-y: auto; overflow-x: hidden; max-height: calc(92vh - 70px);
   scrollbar-width: thin; scrollbar-color: var(--border) transparent;
 }
-.avatar-modal .avatar-opt { font-size: 2rem; padding: 12px; }
+.avatar-modal .avatar-opt { font-size: 1.4rem; padding: 6px; }
 .avatar-grid::-webkit-scrollbar { width: 5px; }
 .avatar-grid::-webkit-scrollbar-track { background: transparent; }
 .avatar-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
