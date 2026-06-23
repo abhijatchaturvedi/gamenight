@@ -392,11 +392,14 @@ function propagateTournamentWinners(gs) {
     for (let m = 0; m < cur.length; m += 2) {
       const ti = Math.floor(m / 2);
       if (ti >= nxt.length) break;
-      const w1 = cur[m]?.winner, w2 = cur[m + 1]?.winner;
-      if (w1) nxt[ti].p1 = w1;
-      if (w2) nxt[ti].p2 = w2;
-      if (nxt[ti].p1 && !nxt[ti].p2 && !nxt[ti].winner) { nxt[ti].winner = nxt[ti].p1; nxt[ti].isBye = true; }
-      if (!nxt[ti].p1 && nxt[ti].p2 && !nxt[ti].winner) { nxt[ti].winner = nxt[ti].p2; nxt[ti].isBye = true; }
+      const match1 = cur[m], match2 = cur[m + 1];
+      if (match1?.winner) nxt[ti].p1 = match1.winner;
+      if (match2?.winner) nxt[ti].p2 = match2.winner;
+      // Only auto-advance when the other slot is permanently empty (null-null bye or missing)
+      const m2empty = !match2 || (match2.isBye && !match2.p1);
+      const m1empty = !match1 || (match1.isBye && !match1.p1);
+      if (nxt[ti].p1 && !nxt[ti].p2 && !nxt[ti].winner && m2empty) { nxt[ti].winner = nxt[ti].p1; nxt[ti].isBye = true; }
+      if (nxt[ti].p2 && !nxt[ti].p1 && !nxt[ti].winner && m1empty) { nxt[ti].winner = nxt[ti].p2; nxt[ti].isBye = true; }
     }
   }
 }
