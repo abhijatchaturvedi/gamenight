@@ -357,6 +357,12 @@ function closeAvatarModal() {
   document.getElementById('avatar-modal').classList.add('hidden');
 }
 
+function getRandomFreeAvatar() {
+  const reserved = new Set(Object.values(NAME_AVATARS));
+  const free = AVATARS.map((_, i) => i).filter(i => !reserved.has(i));
+  return free[Math.floor(Math.random() * free.length)];
+}
+
 function updateAvatarAvailability() {
   const key = document.getElementById('inp-name')?.value.trim().toLowerCase() || '';
   const myMapped = NAME_AVATARS[key];
@@ -370,8 +376,10 @@ function updateAvatarAvailability() {
 }
 
 function initAvatarPicker() {
-  const saved = parseInt(localStorage.getItem('gn_avatar') || '0', 10);
-  App.myAvatar = (saved >= 0 && saved < AVATARS.length) ? saved : 0;
+  const saved = parseInt(localStorage.getItem('gn_avatar') || '-1', 10);
+  const reservedSet = new Set(Object.values(NAME_AVATARS));
+  const savedOk = saved >= 0 && saved < AVATARS.length && !reservedSet.has(saved);
+  App.myAvatar = savedOk ? saved : getRandomFreeAvatar();
 
   const grid = document.getElementById('avatar-picker');
   AVATARS.forEach((av, i) => {
@@ -399,7 +407,12 @@ function initHome() {
 
   document.getElementById('inp-name').addEventListener('input', () => {
     const key = document.getElementById('inp-name').value.trim().toLowerCase();
-    if (NAME_AVATARS[key] !== undefined) selectAvatar(NAME_AVATARS[key]);
+    if (NAME_AVATARS[key] !== undefined) {
+      selectAvatar(NAME_AVATARS[key]);
+    } else {
+      const reserved = new Set(Object.values(NAME_AVATARS));
+      if (reserved.has(App.myAvatar)) selectAvatar(getRandomFreeAvatar());
+    }
     updateAvatarAvailability();
   });
 
