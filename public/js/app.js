@@ -20,7 +20,7 @@ const AVATARS = [
   { emoji: '🐊', name: 'Croc' },     { emoji: '🦉', name: 'Owl' },
   { emoji: '🐬', name: 'Dolphin' },  { emoji: '🦦', name: 'Otter' },
   { emoji: '🐘', name: 'Elephant' }, { emoji: '🐒', name: 'Monkey' },
-  { emoji: '🦒', name: 'Giraffe' },  { emoji: '🪰', name: 'Fly' },
+  { emoji: '🦒', name: 'Giraffe' },  { emoji: '🦌', name: 'Deer' },
   { emoji: '🧪', name: 'Tester' },   { emoji: '🎼', name: 'Conductor' },
   { emoji: '🦗', name: 'Cricket' },  { emoji: '🦓', name: 'Zebra' },
   { emoji: '🦏', name: 'Rhino' },    { emoji: '🦙', name: 'Llama' },
