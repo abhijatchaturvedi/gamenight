@@ -357,6 +357,18 @@ function closeAvatarModal() {
   document.getElementById('avatar-modal').classList.add('hidden');
 }
 
+function updateAvatarAvailability() {
+  const key = document.getElementById('inp-name')?.value.trim().toLowerCase() || '';
+  const myMapped = NAME_AVATARS[key];
+  const reserved = new Set(Object.values(NAME_AVATARS));
+  if (myMapped !== undefined) reserved.delete(myMapped);
+  document.querySelectorAll('.avatar-opt').forEach((btn, i) => {
+    const locked = reserved.has(i);
+    btn.disabled = locked;
+    btn.classList.toggle('avatar-reserved', locked);
+  });
+}
+
 function initAvatarPicker() {
   const saved = parseInt(localStorage.getItem('gn_avatar') || '0', 10);
   App.myAvatar = (saved >= 0 && saved < AVATARS.length) ? saved : 0;
@@ -373,6 +385,7 @@ function initAvatarPicker() {
   });
 
   selectAvatar(App.myAvatar);
+  updateAvatarAvailability();
 
   document.getElementById('btn-change-avatar').addEventListener('click', openAvatarModal);
   document.getElementById('avatar-modal-close').addEventListener('click', closeAvatarModal);
@@ -387,6 +400,7 @@ function initHome() {
   document.getElementById('inp-name').addEventListener('input', () => {
     const key = document.getElementById('inp-name').value.trim().toLowerCase();
     if (NAME_AVATARS[key] !== undefined) selectAvatar(NAME_AVATARS[key]);
+    updateAvatarAvailability();
   });
 
   document.querySelectorAll('.game-card').forEach(card => {
