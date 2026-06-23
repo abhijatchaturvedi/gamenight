@@ -300,7 +300,7 @@ function saveSettings() {
 // ═══════════════════ AVATAR PICKER ═══════════════════
 const NAME_AVATARS = {
   'abhijat': 11,   // 🧛 Vampire
-  'vikas': 6,      // 🦊 Fox
+  'vikas': 49,     // 🦘 Kangaroo
   'pranav': 40,    // 🦒 Giraffe
   'devaansh': 44,  // 🦟 Mosquito
   'garima': 5,     // 🗡️ Rogue
