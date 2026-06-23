@@ -441,7 +441,7 @@ function initHome() {
   document.querySelector('[data-game="killerdoctor"]').classList.add('selected');
   App.selectedGame = 'killerdoctor';
 
-  document.getElementById('btn-create').addEventListener('click', () => {
+  document.getElementById('btn-create')?.addEventListener('click', () => {
     const name = document.getElementById('inp-name').value.trim();
     if (!name) { showError('home-error', 'Please enter your name.'); return; }
     App.myName = name;
@@ -454,7 +454,7 @@ function initHome() {
   document.getElementById('inp-name').addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       const code = document.getElementById('inp-code').value.trim();
-      if (code) doJoin(); else document.getElementById('btn-create').click();
+      if (code) doJoin(); else document.getElementById('btn-create')?.click();
     }
   });
 }
