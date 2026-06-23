@@ -131,7 +131,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 }
 .avatar-modal-close:hover { color: var(--text); background: var(--card); }
 .avatar-modal .avatar-grid {
-  display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px;
+  display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px;
   overflow-y: auto; max-height: calc(92vh - 90px); padding-right: 4px;
   scrollbar-width: thin; scrollbar-color: var(--border) transparent;
 }
