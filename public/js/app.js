@@ -403,7 +403,12 @@ function initAvatarPicker() {
 // ═══════════════════ HOME SCREEN ═══════════════════
 function initHome() {
   const urlCode = new URLSearchParams(window.location.search).get('code');
-  if (urlCode) document.getElementById('inp-code').value = urlCode.toUpperCase();
+  if (urlCode) {
+    document.getElementById('inp-code').value = urlCode.toUpperCase();
+    document.getElementById('btn-create').disabled = true;
+    document.getElementById('btn-create').closest('.home-card').classList.add('home-card-disabled');
+    document.querySelector('.home-or').classList.add('hidden');
+  }
 
   document.getElementById('inp-name').addEventListener('input', () => {
     const key = document.getElementById('inp-name').value.trim().toLowerCase();
