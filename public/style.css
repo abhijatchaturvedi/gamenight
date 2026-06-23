@@ -831,6 +831,19 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .btn-host-ctrl:hover { background: rgba(255,255,255,0.18); transform: scale(1.1); }
 .btn-kick-ctrl:hover { background: rgba(239,68,68,0.25); }
 
+/* ═══════════════════ IN-GAME KICK BUTTONS ═══════════════════ */
+.kd-kick-btn, .scb-kick-btn {
+  font-size: 0.7rem; padding: 1px 5px; flex-shrink: 0; opacity: 0.45;
+  transition: opacity .15s, background .15s;
+}
+.kd-kick-btn:hover, .scb-kick-btn:hover { opacity: 1; }
+.ttt-kick-btn {
+  font-size: 0.72rem; padding: 2px 8px; margin-top: 6px;
+  display: block; width: 100%; opacity: 0.45;
+  transition: opacity .15s, background .15s;
+}
+.ttt-kick-btn:hover { opacity: 1; }
+
 /* ═══════════════════ SESSION STATS ═══════════════════ */
 .session-stats {
   background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);

@@ -163,6 +163,21 @@ const TicTacToe = (() => {
     prevBoard = [...(state.board || Array(9).fill(null))];
   }
 
+  function renderScoreKickBtn(cardId, playerId, playerName) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    card.querySelectorAll('.ttt-kick-btn').forEach(b => b.remove());
+    if (!App.isHost || playerId === App.myId) return;
+    const btn = document.createElement('button');
+    btn.className = 'btn-host-ctrl btn-kick-ctrl ttt-kick-btn';
+    btn.title = `Kick ${playerName}`;
+    btn.textContent = '🚫';
+    btn.addEventListener('click', () => {
+      showConfirm(`Kick ${playerName}?`, () => App.socket.emit('room:kick', { playerId }), { confirmText: 'Kick', danger: true });
+    });
+    card.appendChild(btn);
+  }
+
   function renderScores() {
     const { players, scores, bestOf } = state;
     document.getElementById('ttt-name-X').textContent = players.X.name + (players.X.id === App.myId ? ' (You)' : '');
@@ -171,6 +186,8 @@ const TicTacToe = (() => {
     document.getElementById('ttt-pts-O').textContent = scores[players.O.id] || 0;
     document.getElementById('ttt-score-X').classList.toggle('active-turn', state.currentTurn === players.X.id && !state.winner);
     document.getElementById('ttt-score-O').classList.toggle('active-turn', state.currentTurn === players.O.id && !state.winner);
+    renderScoreKickBtn('ttt-score-X', players.X.id, players.X.name);
+    renderScoreKickBtn('ttt-score-O', players.O.id, players.O.name);
     const matchLabel = document.getElementById('ttt-match-label');
     if (matchLabel) {
       matchLabel.textContent = bestOf > 0 ? `Best of ${bestOf}` : 'Free Play';
@@ -187,6 +204,8 @@ const TicTacToe = (() => {
     document.getElementById('ttt-pts-O').textContent = '—';
     document.getElementById('ttt-score-X').classList.toggle('active-turn', state.currentTurn === players.X.id && !state.winner);
     document.getElementById('ttt-score-O').classList.toggle('active-turn', state.currentTurn === players.O.id && !state.winner);
+    renderScoreKickBtn('ttt-score-X', players.X.id, players.X.name);
+    renderScoreKickBtn('ttt-score-O', players.O.id, players.O.name);
   }
 
   function renderStatus() {

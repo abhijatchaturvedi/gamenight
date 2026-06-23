@@ -145,7 +145,7 @@ io.on('connection', socket => {
 
   socket.on('room:kick', ({ playerId }) => {
     const room = getRoom(socket.id);
-    if (!room || room.host !== socket.id || room.status !== 'lobby') return;
+    if (!room || room.host !== socket.id) return;
     if (!playerId || playerId === socket.id) return;
     const player = room.players.get(playerId);
     if (!player) return;
@@ -154,7 +154,11 @@ io.on('connection', socket => {
     room.players.delete(playerId);
     playerRooms.delete(playerId);
     io.to(room.code).emit('notification', `${player.name} was removed by the host`);
-    broadcastLobby(room);
+    if (room.status === 'playing') {
+      onPlayerDisconnect(room, playerId, player.name);
+    } else {
+      broadcastLobby(room);
+    }
   });
 
   socket.on('room:transfer_host', ({ playerId }) => {

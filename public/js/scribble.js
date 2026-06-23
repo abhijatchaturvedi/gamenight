@@ -292,6 +292,17 @@ const Scribble = (() => {
       score.className = 'scb-score';
       score.textContent = p.score || 0;
       item.appendChild(av); item.appendChild(name); item.appendChild(score);
+      if (App.isHost && p.id !== App.myId) {
+        const kickBtn = document.createElement('button');
+        kickBtn.className = 'btn-host-ctrl btn-kick-ctrl scb-kick-btn';
+        kickBtn.title = `Kick ${p.name}`;
+        kickBtn.textContent = '🚫';
+        kickBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          showConfirm(`Kick ${p.name}?`, () => App.socket.emit('room:kick', { playerId: p.id }), { confirmText: 'Kick', danger: true });
+        });
+        item.appendChild(kickBtn);
+      }
       list.appendChild(item);
     });
   }
