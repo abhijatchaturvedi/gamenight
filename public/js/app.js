@@ -311,6 +311,7 @@ const NAME_AVATARS = {
   'arnav': 8,      // 🦅 Eagle
   'suryansh': 16,  // 🐉 Dragon
   'priyanshi': 21, // 🦝 Raccoon
+  'khushhal': 20,  // 🐙 Octopus
 };
 
 function selectAvatar(idx) {
