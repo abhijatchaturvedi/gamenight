@@ -304,7 +304,7 @@ const NAME_AVATARS = {
   'pranav': 40,    // 🦒 Giraffe
   'devaansh': 44,  // 🦟 Mosquito
   'garima': 5,     // 🗡️ Rogue
-  'harshit': 37,   // 🦦 Otter
+  'harshit': 39,   // 🐒 Monkey
   'deepak': 7,     // 🐺 Wolf
   'abhishek': 31,  // 🤖 Robot
   'piyush': 26,    // 🐯 Tiger
