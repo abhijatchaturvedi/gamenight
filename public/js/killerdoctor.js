@@ -520,6 +520,7 @@ const KillerDoctor = (() => {
     document.getElementById('kd-win-title').textContent = isVillagers ? 'Villagers Win!' : 'Killer Wins!';
     document.getElementById('kd-win-reason').textContent = reason;
     document.getElementById('kd-btn-again').style.display = App.isHost ? 'inline-block' : 'none';
+    document.getElementById('kd-btn-lobby').style.display = App.isHost ? 'inline-block' : 'none';
     setPhase('gameover');
     showNightAnimation(isVillagers ? 'villagers_win' : 'killer_wins');
     setTimeout(() => {
