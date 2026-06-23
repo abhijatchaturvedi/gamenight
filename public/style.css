@@ -584,8 +584,9 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .chat-msg .msg-text { font-size: 0.9rem; color: var(--text); word-break: break-word; }
 .chat-msg.system { color: var(--muted); font-size: 0.8rem; }
 .chat-msg.correct .msg-text { color: var(--green); font-weight: 700; }
-.chat-input-row { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border); }
+.chat-input-row { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border); flex-shrink: 0; }
 .chat-input-row input { flex: 1; }
+.day-layout .chat-messages { max-height: none; }
 
 .vote-progress-bar { background: var(--surface); border-radius: 6px; padding: 8px 12px; font-size: 0.875rem; color: var(--muted); }
 .vote-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 10px; }
