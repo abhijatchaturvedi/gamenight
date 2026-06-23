@@ -294,16 +294,13 @@ const NAME_AVATARS = {
   'abhijat': 11,   // 🧛 Vampire
   'vikas': 6,      // 🦊 Fox
   'pranav': 40,    // 🦒 Giraffe
-  'devaansh': 41,  // 🪰 Fly
   'harshit': 37,   // 🦦 Otter
   'deepak': 7,     // 🐺 Wolf
   'abhishek': 31,  // 🤖 Robot
   'piyush': 26,    // 🐯 Tiger
   'arnav': 8,      // 🦅 Eagle
   'suryansh': 16,  // 🐉 Dragon
-  'garima': 42,    // 🧪 Tester
   'priyanshi': 21, // 🦝 Raccoon
-  'abhijat': 43,   // 🎼 Conductor
 };
 
 function selectAvatar(idx) {
