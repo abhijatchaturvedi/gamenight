@@ -44,8 +44,11 @@
       <input id="inp-name" type="text" placeholder="Your name..." maxlength="20" autocomplete="off">
     </div>
     <div class="avatar-section">
-      <div class="avatar-section-label">Pick your avatar</div>
-      <div class="avatar-grid" id="avatar-picker"></div>
+      <div class="avatar-preview-row">
+        <span id="avatar-preview-emoji" class="avatar-preview-emoji"></span>
+        <span id="avatar-preview-name" class="avatar-preview-name"></span>
+        <button id="btn-change-avatar" class="btn-change-avatar">Change</button>
+      </div>
     </div>
     <div class="home-actions">
       <div class="home-card">
@@ -539,6 +542,18 @@
 </div>
 
 <!-- ══════════════════════ GLOBAL OVERLAYS ══════════════════════ -->
+<!-- ══════════════════════ AVATAR MODAL ══════════════════════ -->
+<div id="avatar-modal" class="avatar-modal hidden">
+  <div id="avatar-modal-backdrop" class="avatar-modal-backdrop"></div>
+  <div class="avatar-modal-box">
+    <div class="avatar-modal-header">
+      <span>Pick your avatar</span>
+      <button id="avatar-modal-close" class="avatar-modal-close">✕</button>
+    </div>
+    <div class="avatar-grid" id="avatar-picker"></div>
+  </div>
+</div>
+
 <div id="toast-container"></div>
 <div id="loading-overlay" class="hidden">
   <div class="spinner"></div>

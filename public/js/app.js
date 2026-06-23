@@ -30,6 +30,26 @@ const AVATARS = [
   { emoji: '💀', name: 'Skull' },    { emoji: '🔥', name: 'Inferno' },
   { emoji: '⚡', name: 'Bolt' },     { emoji: '🌙', name: 'Luna' },
   { emoji: '🌊', name: 'Tide' },     { emoji: '🎯', name: 'Bullseye' },
+  { emoji: '🐆', name: 'Cheetah' },  { emoji: '🦃', name: 'Turkey' },
+  { emoji: '🦢', name: 'Swan' },     { emoji: '🕊️', name: 'Dove' },
+  { emoji: '🦡', name: 'Badger' },   { emoji: '🐇', name: 'Rabbit' },
+  { emoji: '🐿️', name: 'Chipmunk' }, { emoji: '🐈', name: 'Cat' },
+  { emoji: '🐕', name: 'Dog' },      { emoji: '🐐', name: 'Goat' },
+  { emoji: '🦑', name: 'Squid' },    { emoji: '🦞', name: 'Lobster' },
+  { emoji: '🐌', name: 'Snail' },    { emoji: '🐞', name: 'Ladybug' },
+  { emoji: '🦂', name: 'Scorpion' }, { emoji: '🕷️', name: 'Spider' },
+  { emoji: '🦎', name: 'Lizard' },   { emoji: '🐍', name: 'Snake' },
+  { emoji: '🐢', name: 'Turtle' },   { emoji: '🦕', name: 'Sauropod' },
+  { emoji: '🦖', name: 'T-Rex' },    { emoji: '🧚', name: 'Fairy' },
+  { emoji: '👹', name: 'Ogre' },     { emoji: '👺', name: 'Goblin' },
+  { emoji: '👻', name: 'Spook' },    { emoji: '👾', name: 'Alien' },
+  { emoji: '🎃', name: 'Pumpkin' },  { emoji: '💎', name: 'Gem' },
+  { emoji: '🔱', name: 'Trident' },  { emoji: '⚓', name: 'Anchor' },
+  { emoji: '🌋', name: 'Volcano' },  { emoji: '☄️', name: 'Comet' },
+  { emoji: '❄️', name: 'Frost' },    { emoji: '🌪️', name: 'Cyclone' },
+  { emoji: '🧲', name: 'Magnet' },   { emoji: '🦠', name: 'Microbe' },
+  { emoji: '🐓', name: 'Rooster' },  { emoji: '🧸', name: 'Teddy' },
+  { emoji: '🌈', name: 'Rainbow' },  { emoji: '🏆', name: 'Trophy' },
 ];
 
 // ═══════════════════ GLOBAL STATE ═══════════════════
@@ -319,9 +339,22 @@ function selectAvatar(idx) {
   localStorage.setItem('gn_avatar', idx);
   document.querySelectorAll('.avatar-opt').forEach((btn, i) => {
     btn.classList.toggle('selected', i === idx);
-    btn.classList.remove('avatar-opt-enter');
   });
-  document.querySelectorAll('.avatar-opt')[idx]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  const av = AVATARS[idx];
+  const previewEmoji = document.getElementById('avatar-preview-emoji');
+  if (previewEmoji) {
+    previewEmoji.textContent = av.emoji;
+    document.getElementById('avatar-preview-name').textContent = av.name;
+  }
+}
+
+function openAvatarModal() {
+  document.getElementById('avatar-modal').classList.remove('hidden');
+  document.querySelectorAll('.avatar-opt')[App.myAvatar]?.scrollIntoView({ block: 'center' });
+}
+
+function closeAvatarModal() {
+  document.getElementById('avatar-modal').classList.add('hidden');
 }
 
 function initAvatarPicker() {
@@ -332,14 +365,18 @@ function initAvatarPicker() {
   AVATARS.forEach((av, i) => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'avatar-opt' + (i === App.myAvatar ? ' selected' : ' avatar-opt-enter');
-    btn.style.animationDelay = `${i * 0.018}s`;
+    btn.className = 'avatar-opt' + (i === App.myAvatar ? ' selected' : '');
     btn.textContent = av.emoji;
     btn.title = av.name;
-    btn.addEventListener('animationend', () => btn.classList.remove('avatar-opt-enter'));
-    btn.addEventListener('click', () => selectAvatar(i));
+    btn.addEventListener('click', () => { selectAvatar(i); closeAvatarModal(); });
     grid.appendChild(btn);
   });
+
+  selectAvatar(App.myAvatar);
+
+  document.getElementById('btn-change-avatar').addEventListener('click', openAvatarModal);
+  document.getElementById('avatar-modal-close').addEventListener('click', closeAvatarModal);
+  document.getElementById('avatar-modal-backdrop').addEventListener('click', closeAvatarModal);
 }
 
 // ═══════════════════ HOME SCREEN ═══════════════════

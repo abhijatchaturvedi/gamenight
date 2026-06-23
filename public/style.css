@@ -94,10 +94,45 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .join-box { width: 100%; max-width: 420px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 28px; }
 .form-row { margin-bottom: 14px; }
 .avatar-section { margin: 0 0 16px; }
-.avatar-section-label { font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
-.avatar-grid {
-  display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
-  max-height: 192px; overflow-y: auto; padding-right: 4px;
+.avatar-preview-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px;
+}
+.avatar-preview-emoji { font-size: 1.8rem; line-height: 1; }
+.avatar-preview-name { flex: 1; font-weight: 600; font-size: 0.95rem; color: var(--text); }
+.btn-change-avatar {
+  background: transparent; border: 1px solid var(--border); color: var(--muted);
+  border-radius: 6px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.btn-change-avatar:hover { border-color: var(--accent); color: var(--accent); }
+
+.avatar-modal {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+}
+.avatar-modal.hidden { display: none; }
+.avatar-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.65); }
+.avatar-modal-box {
+  position: relative; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 16px; padding: 20px; width: 90%; max-width: 380px;
+  max-height: 80vh; display: flex; flex-direction: column; gap: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.avatar-modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: 700; font-size: 1rem; color: var(--text);
+}
+.avatar-modal-close {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-size: 1.1rem; padding: 4px 8px; border-radius: 6px;
+  transition: color .15s, background .15s;
+}
+.avatar-modal-close:hover { color: var(--text); background: var(--card); }
+.avatar-modal .avatar-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+  overflow-y: auto; max-height: calc(80vh - 80px); padding-right: 4px;
   scrollbar-width: thin; scrollbar-color: var(--border) transparent;
 }
 .avatar-grid::-webkit-scrollbar { width: 5px; }
