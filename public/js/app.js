@@ -51,8 +51,6 @@ const SETTINGS_SCHEMA = {
       options: [{v:60,l:'1 min'},{v:90,l:'90 sec'},{v:120,l:'2 min ★'},{v:150,l:'2.5 min'},{v:180,l:'3 min'}] },
     { id: 'votingTime', label: 'Voting Time', default: 45, isTime: true,
       options: [{v:30,l:'30 sec'},{v:45,l:'45 sec'},{v:60,l:'60 sec ★'},{v:90,l:'90 sec'}] },
-    { id: 'nightTime', label: 'Night Action Time', default: 45, isTime: true,
-      options: [{v:30,l:'30 sec'},{v:45,l:'45 sec ★'},{v:60,l:'60 sec'}] },
   ],
   tictactoe: [
     { id: 'bestOf', label: 'Match Format', default: 0,
