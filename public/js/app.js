@@ -467,7 +467,7 @@ function renderLobby({ players, code, gameType, hostId, minPlayers, settings, se
   App.isHost = hostId === App.myId;
   App.currentSettings = settings || {};
 
-  const gameNames = { tictactoe: 'Tic Tac Toe', killerdoctor: 'Killer Doctor', scribble: 'Scribble' };
+  const gameNames = { tictactoe: 'Tic Tac Toe', killerdoctor: 'Mongolpuri', scribble: 'Scribble' };
   document.getElementById('lobby-title').textContent = gameNames[gameType] || 'Lobby';
   document.getElementById('lobby-code').textContent = code;
 
