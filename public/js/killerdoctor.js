@@ -311,6 +311,11 @@ const KillerDoctor = (() => {
     startAmbient();
   }
 
+  function randomNightDelay(payload) {
+    const delay = 1000 + Math.random() * 4000;
+    setTimeout(() => App.socket.emit('game:action', payload), delay);
+  }
+
   function makeTargetBtn(t, onClick) {
     const btn = document.createElement('button');
     btn.className = 'target-btn';
@@ -337,7 +342,8 @@ const KillerDoctor = (() => {
       const btn = makeTargetBtn(t, () => {
         grid.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
-        App.socket.emit('game:action', { action: 'night_kill', targetId: t.id });
+        grid.querySelectorAll('.target-btn').forEach(b => b.disabled = true);
+        randomNightDelay({ action: 'night_kill', targetId: t.id });
       });
       grid.appendChild(btn);
     });
@@ -357,7 +363,8 @@ const KillerDoctor = (() => {
       const btn = makeTargetBtn({ ...t, name: t.name + (isMe ? ' (You)' : '') }, () => {
         grid.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
-        App.socket.emit('game:action', { action: 'night_save', targetId: t.id });
+        grid.querySelectorAll('.target-btn').forEach(b => b.disabled = true);
+        randomNightDelay({ action: 'night_save', targetId: t.id });
       });
       grid.appendChild(btn);
     });
