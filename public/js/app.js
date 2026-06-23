@@ -22,7 +22,7 @@ const AVATARS = [
   { emoji: '🐘', name: 'Elephant' }, { emoji: '🐒', name: 'Monkey' },
   { emoji: '🦒', name: 'Giraffe' },  { emoji: '🦌', name: 'Deer' },
   { emoji: '🧪', name: 'Tester' },   { emoji: '🎼', name: 'Conductor' },
-  { emoji: '🦗', name: 'Cricket' },  { emoji: '🦓', name: 'Zebra' },
+  { emoji: '🦟', name: 'Mosquito' },  { emoji: '🦓', name: 'Zebra' },
   { emoji: '🦏', name: 'Rhino' },    { emoji: '🦙', name: 'Llama' },
   { emoji: '🦛', name: 'Hippo' },    { emoji: '🦘', name: 'Kangaroo' },
   { emoji: '🦔', name: 'Hedgehog' }, { emoji: '🐝', name: 'Bee' },
@@ -302,7 +302,7 @@ const NAME_AVATARS = {
   'abhijat': 11,   // 🧛 Vampire
   'vikas': 6,      // 🦊 Fox
   'pranav': 40,    // 🦒 Giraffe
-  'devaansh': 44,  // 🦗 Cricket
+  'devaansh': 44,  // 🦟 Mosquito
   'garima': 5,     // 🗡️ Rogue
   'harshit': 37,   // 🦦 Otter
   'deepak': 7,     // 🐺 Wolf
