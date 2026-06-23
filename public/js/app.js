@@ -22,7 +22,14 @@ const AVATARS = [
   { emoji: '🐘', name: 'Elephant' }, { emoji: '🐒', name: 'Monkey' },
   { emoji: '🦒', name: 'Giraffe' },  { emoji: '🪰', name: 'Fly' },
   { emoji: '🧪', name: 'Tester' },   { emoji: '🎼', name: 'Conductor' },
-  { emoji: '🦗', name: 'Cricket' },
+  { emoji: '🦗', name: 'Cricket' },  { emoji: '🦓', name: 'Zebra' },
+  { emoji: '🦏', name: 'Rhino' },    { emoji: '🦙', name: 'Llama' },
+  { emoji: '🦛', name: 'Hippo' },    { emoji: '🦘', name: 'Kangaroo' },
+  { emoji: '🦔', name: 'Hedgehog' }, { emoji: '🐝', name: 'Bee' },
+  { emoji: '🦇', name: 'Bat' },      { emoji: '🦚', name: 'Peacock' },
+  { emoji: '💀', name: 'Skull' },    { emoji: '🔥', name: 'Inferno' },
+  { emoji: '⚡', name: 'Bolt' },     { emoji: '🌙', name: 'Luna' },
+  { emoji: '🌊', name: 'Tide' },     { emoji: '🎯', name: 'Bullseye' },
 ];
 
 // ═══════════════════ GLOBAL STATE ═══════════════════
