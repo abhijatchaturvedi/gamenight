@@ -731,8 +731,13 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 #scb-canvas { flex: 1; display: block; width: 100%; height: auto; min-height: 0; background: #ffffff; }
 
 /* ═══════════════════ HOME RULES BUTTON ═══════════════════ */
-.btn-rules-link { background: transparent; color: var(--muted); border: none; font-size: 0.85rem; padding: 4px 0; margin-bottom: 8px; text-decoration: underline; cursor: pointer; display: block; }
-.btn-rules-link:hover { color: var(--text); }
+.btn-rules-link {
+  background: transparent; color: var(--muted); border: 1px solid var(--border);
+  border-radius: 8px; font-size: 0.85rem; padding: 8px 16px; margin-bottom: 8px;
+  cursor: pointer; display: block; width: 100%; text-align: center;
+  transition: border-color .15s, color .15s;
+}
+.btn-rules-link:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ═══════════════════ LOBBY SETTINGS ═══════════════════ */
 .lobby-header-actions { display: flex; gap: 10px; align-items: center; }
