@@ -373,14 +373,24 @@ function buildTournamentRounds(playerIds) {
   while (seeds.length < size) seeds.push(null);
   const rounds = [];
   let current = seeds;
+  let prevPhantoms = null;
   while (current.length > 1) {
     const matches = [];
+    const phantoms = [];
     for (let i = 0; i < current.length; i += 2) {
       const p1 = current[i], p2 = current[i + 1] ?? null;
       const isBye = p2 === null;
-      matches.push({ p1, p2, winner: isBye ? p1 : null, isBye });
+      // A match is phantom when no real player will ever appear in it.
+      // Round 0: phantom iff both seeds are null.
+      // Later rounds: phantom iff BOTH feeding matches were phantom.
+      const phantom = prevPhantoms === null
+        ? (p1 === null && p2 === null)
+        : ((prevPhantoms[i] ?? true) && (prevPhantoms[i + 1] ?? true));
+      matches.push({ p1, p2, winner: isBye ? p1 : null, isBye, phantom });
+      phantoms.push(phantom);
     }
     rounds.push(matches);
+    prevPhantoms = phantoms;
     current = new Array(matches.length).fill(null);
   }
   return rounds;
@@ -395,9 +405,9 @@ function propagateTournamentWinners(gs) {
       const match1 = cur[m], match2 = cur[m + 1];
       if (match1?.winner) nxt[ti].p1 = match1.winner;
       if (match2?.winner) nxt[ti].p2 = match2.winner;
-      // Only auto-advance when the other slot is permanently empty (null-null bye or missing)
-      const m2empty = !match2 || (match2.isBye && !match2.p1);
-      const m1empty = !match1 || (match1.isBye && !match1.p1);
+      // Only auto-advance when the other slot is permanently empty (phantom match or missing)
+      const m2empty = !match2 || match2.phantom;
+      const m1empty = !match1 || match1.phantom;
       if (nxt[ti].p1 && !nxt[ti].p2 && !nxt[ti].winner && m2empty) { nxt[ti].winner = nxt[ti].p1; nxt[ti].isBye = true; }
       if (nxt[ti].p2 && !nxt[ti].p1 && !nxt[ti].winner && m1empty) { nxt[ti].winner = nxt[ti].p2; nxt[ti].isBye = true; }
     }
