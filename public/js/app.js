@@ -296,7 +296,7 @@ const NAME_AVATARS = {
   'vikas': 6,      // 🦊 Fox
   'pranav': 40,    // 🦒 Giraffe
   'devaansh': 44,  // 🦗 Cricket
-  'garima': 19,    // 🦄 Unicorn
+  'garima': 5,     // 🗡️ Rogue
   'harshit': 37,   // 🦦 Otter
   'deepak': 7,     // 🐺 Wolf
   'abhishek': 31,  // 🤖 Robot
