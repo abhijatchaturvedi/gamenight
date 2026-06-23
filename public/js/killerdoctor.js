@@ -36,6 +36,11 @@ const KillerDoctor = (() => {
     });
 
     App.socket.on('kd:night_start', onNightStart);
+    App.socket.on('kd:night_progress', ({ confirmed, total }) => {
+      const el = document.getElementById('kd-night-progress');
+      el.textContent = `${confirmed} / ${total} confirmed`;
+      el.classList.remove('hidden');
+    });
     App.socket.on('kd:killer_action', onKillerAction);
     App.socket.on('kd:doctor_action', onDoctorAction);
     App.socket.on('kd:action_confirmed', onActionConfirmed);
@@ -312,6 +317,7 @@ const KillerDoctor = (() => {
       awakeBtn.classList.add('hidden');
     }
     document.getElementById('kd-night-timer').classList.add('hidden');
+    document.getElementById('kd-night-progress').classList.add('hidden');
     setPhase('night');
     startTimer('kd-night-timer', 45);
     showNightAnimation('night');

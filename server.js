@@ -719,15 +719,15 @@ function kdAction(room, socket, data) {
       if (gs.phase!=='night'||pd.role!=='killer'||pd.hasActedNight) return;
       { const t=gs.playerData[data.targetId]; if (!t?.alive||data.targetId===socket.id) return;
         pd.nightChoice=data.targetId; pd.hasActedNight=true;
-        socket.emit('kd:action_confirmed',{action:'night_kill'}); checkNightDone(room); } break;
+        socket.emit('kd:action_confirmed',{action:'night_kill'}); kdBroadcastNightProgress(room); checkNightDone(room); } break;
     case 'night_save':
       if (gs.phase!=='night'||pd.role!=='doctor'||pd.hasActedNight) return;
       { const t=gs.playerData[data.targetId]; if (!t?.alive) return;
         pd.nightChoice=data.targetId; pd.hasActedNight=true;
-        socket.emit('kd:action_confirmed',{action:'night_save'}); checkNightDone(room); } break;
+        socket.emit('kd:action_confirmed',{action:'night_save'}); kdBroadcastNightProgress(room); checkNightDone(room); } break;
     case 'night_awake':
       if (gs.phase!=='night'||pd.role!=='villager'||pd.hasActedNight) return;
-      pd.hasActedNight=true; checkNightDone(room); break;
+      pd.hasActedNight=true; kdBroadcastNightProgress(room); checkNightDone(room); break;
     case 'vote':
       if (gs.phase!=='voting'||data.targetId===socket.id) return;
       { const t=gs.playerData[data.targetId]; if (!t?.alive) return;
@@ -738,6 +738,11 @@ function kdAction(room, socket, data) {
         socket.emit('kd:vote_confirmed',{targetId:data.targetId,targetName:t.name});
         if (cast>=total){clearTimers(room);kdResolveVoting(room);} } break;
   }
+}
+
+function kdBroadcastNightProgress(room) {
+  const alive = kdAlive(room.gameState);
+  io.to(room.code).emit('kd:night_progress', { confirmed: alive.filter(p => p.hasActedNight).length, total: alive.length });
 }
 
 const kdAlive = gs => Object.values(gs.playerData).filter(p => p.alive);

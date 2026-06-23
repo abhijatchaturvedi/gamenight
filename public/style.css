@@ -329,6 +329,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .action-done { color: var(--green); font-weight: 700; font-size: 1rem; margin-top: 16px; }
 .kd-villager-awake-btn { margin-top: 20px; padding: 14px 32px; font-size: 1.1rem; font-weight: 700; background: rgba(255,255,255,.08); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); cursor: pointer; }
 .kd-villager-awake-btn:disabled { opacity: 0.5; cursor: default; color: var(--green); border-color: var(--green); }
+.kd-night-progress { margin-top: 14px; font-size: 0.85rem; color: var(--muted); letter-spacing: .05em; }
 .night-timer-wrap { text-align: center; padding: 16px; }
 .countdown { font-size: 2rem; font-weight: 800; color: var(--yellow); }
 .countdown.danger { color: var(--red); animation: blink .5s step-end infinite; }
