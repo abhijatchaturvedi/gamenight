@@ -25,9 +25,17 @@ body {
   background: var(--bg);
   color: var(--text);
   overflow-x: hidden;
+  overflow-y: auto;
   font-size: 15px;
   line-height: 1.5;
 }
+
+/* ─── Global thin scrollbars ─── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
 
 a { color: var(--accent2); text-decoration: none; }
 h1,h2,h3,h4 { line-height: 1.25; }
@@ -137,10 +145,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
   scrollbar-width: thin; scrollbar-color: var(--border) transparent;
 }
 .avatar-modal .avatar-opt { font-size: 1.4rem; padding: 6px; }
-.avatar-grid::-webkit-scrollbar { width: 5px; }
-.avatar-grid::-webkit-scrollbar-track { background: transparent; }
-.avatar-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
-.avatar-grid::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
 
 .avatar-opt {
   background: var(--card); border: 2px solid var(--border); border-radius: 8px;
@@ -336,8 +341,8 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .kd-player-item .player-name-wrap { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .kd-player-item .you-tag { font-size: 0.7rem; color: var(--accent2); }
 
-.kd-history-wrap {}
-.kd-history { display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; color: var(--muted); }
+.kd-history-wrap { min-height: 0; }
+.kd-history { display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; color: var(--muted); overflow-y: auto; max-height: 160px; }
 .history-item { padding: 4px 0; border-bottom: 1px solid var(--border); }
 
 .kd-main { flex: 1; min-width: 0; overflow-y: auto; }
@@ -614,8 +619,8 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .timer-display { font-size: 1.5rem; font-weight: 800; color: var(--accent2); font-family: monospace; }
 .timer-display.danger { color: var(--red); }
 
-.chat-box { display: flex; flex-direction: column; flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-.chat-messages { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; max-height: 350px; }
+.chat-box { display: flex; flex-direction: column; flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; min-height: 0; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; max-height: 350px; min-height: 0; }
 .chat-msg { display: flex; gap: 8px; }
 .chat-msg .msg-name { font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
 .chat-msg .msg-text { font-size: 0.9rem; color: var(--text); word-break: break-word; }
