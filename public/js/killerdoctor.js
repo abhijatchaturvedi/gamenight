@@ -70,18 +70,21 @@ const KillerDoctor = (() => {
     const card = document.getElementById('kd-role-card');
     const roleNameEl = document.getElementById('kd-role-name');
     const charEl = document.getElementById('kd-role-character');
+    const descEl = document.getElementById('kd-role-desc');
     const btn = document.getElementById('kd-toggle-role');
     if (roleVisible) {
       const info = ROLE_INFO[myRole] || {};
       roleNameEl.textContent = `${info.icon || ''} ${myRole?.toUpperCase() || '—'}`;
       charEl.classList.remove('hidden');
+      descEl.classList.remove('hidden');
       card.classList.remove('hidden-role');
-      btn.textContent = 'Hide Role';
+      btn.textContent = 'Hide';
     } else {
       roleNameEl.textContent = '🂠 Hidden';
       charEl.classList.add('hidden');
+      descEl.classList.add('hidden');
       card.classList.add('hidden-role');
-      btn.textContent = 'Show Role';
+      btn.textContent = 'Show';
     }
   }
 
@@ -95,10 +98,12 @@ const KillerDoctor = (() => {
     document.getElementById('kd-role-desc').textContent = info.desc || '';
     document.getElementById('kd-role-character').textContent = `${av.emoji} ${av.name}`;
     document.getElementById('kd-you-status').textContent = alive ? '🟢 Alive' : '💀 Dead';
-    roleVisible = true;
-    card.classList.remove('hidden-role');
-    document.getElementById('kd-role-character').classList.remove('hidden');
-    document.getElementById('kd-toggle-role').textContent = 'Hide Role';
+    roleVisible = false;
+    card.classList.add('hidden-role');
+    document.getElementById('kd-role-name').textContent = '🂠 Hidden';
+    document.getElementById('kd-role-character').classList.add('hidden');
+    document.getElementById('kd-role-desc').classList.add('hidden');
+    document.getElementById('kd-toggle-role').textContent = 'Show';
   }
 
   function renderPlayerList(living, dead) {

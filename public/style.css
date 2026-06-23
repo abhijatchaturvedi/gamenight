@@ -287,6 +287,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .kd-role-card[data-role="killer"] { border-color: var(--red); }
 .kd-role-card[data-role="doctor"] { border-color: var(--green); }
 .kd-role-card[data-role="villager"] { border-color: var(--border); }
+.kd-role-card.hidden-role { border-color: var(--border) !important; }
 .kd-role-card.hidden-role .role-name { color: var(--muted); }
 
 .kd-you-status { text-align: center; font-size: 0.9rem; font-weight: 600; }
