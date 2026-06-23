@@ -21,6 +21,8 @@ const KillerDoctor = (() => {
     document.getElementById('kd-villager-awake').addEventListener('click', function() {
       this.textContent = '✓ Confirmed';
       this.disabled = true;
+      document.getElementById('kd-action-desc').textContent = 'Waiting for others…';
+      App.socket.emit('game:action', { action: 'night_awake' });
     });
 
     document.getElementById('kd-chat-input').addEventListener('keydown', e => {
@@ -294,26 +296,26 @@ const KillerDoctor = (() => {
     addHistory(`Night ${round} began.`);
     document.getElementById('kd-night-title').textContent = `Night ${round}`;
     document.getElementById('kd-night-subtitle').textContent = 'The village sleeps…';
+    const isAlive = livingPlayers.some(p => p.id === App.myId);
     const nightAction = document.getElementById('kd-night-action');
     nightAction.classList.remove('hidden');
     document.getElementById('kd-action-title').textContent = '🌙 Night Phase';
-    document.getElementById('kd-action-desc').textContent = 'Stay quiet and don\'t react…';
+    document.getElementById('kd-action-desc').textContent = isAlive ? 'Stay quiet and don\'t react…' : 'You are dead. Watch quietly.';
     document.getElementById('kd-action-targets').innerHTML = '';
     document.getElementById('kd-action-done').classList.add('hidden');
     const awakeBtn = document.getElementById('kd-villager-awake');
-    awakeBtn.textContent = '👁️ I\'m awake';
-    awakeBtn.disabled = false;
-    awakeBtn.classList.remove('hidden');
-    document.getElementById('kd-night-timer').classList.remove('hidden');
+    if (isAlive) {
+      awakeBtn.textContent = '👁️ I\'m awake';
+      awakeBtn.disabled = false;
+      awakeBtn.classList.remove('hidden');
+    } else {
+      awakeBtn.classList.add('hidden');
+    }
+    document.getElementById('kd-night-timer').classList.add('hidden');
     setPhase('night');
     startTimer('kd-night-timer', 45);
     showNightAnimation('night');
     startAmbient();
-  }
-
-  function randomNightDelay(payload) {
-    const delay = 1000 + Math.random() * 4000;
-    setTimeout(() => App.socket.emit('game:action', payload), delay);
   }
 
   function makeTargetBtn(t, onClick) {
@@ -343,7 +345,7 @@ const KillerDoctor = (() => {
         grid.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         grid.querySelectorAll('.target-btn').forEach(b => b.disabled = true);
-        randomNightDelay({ action: 'night_kill', targetId: t.id });
+        App.socket.emit('game:action', { action: 'night_kill', targetId: t.id });
       });
       grid.appendChild(btn);
     });
@@ -364,7 +366,7 @@ const KillerDoctor = (() => {
         grid.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         grid.querySelectorAll('.target-btn').forEach(b => b.disabled = true);
-        randomNightDelay({ action: 'night_save', targetId: t.id });
+        App.socket.emit('game:action', { action: 'night_save', targetId: t.id });
       });
       grid.appendChild(btn);
     });
@@ -375,6 +377,7 @@ const KillerDoctor = (() => {
     const isKill = action === 'night_kill';
     document.getElementById('kd-action-done').textContent = isKill ? '✓ Target selected' : '✓ Save submitted';
     document.getElementById('kd-action-done').classList.remove('hidden');
+    document.getElementById('kd-action-desc').textContent = 'Waiting for others…';
     document.querySelectorAll('#kd-action-targets .target-btn').forEach(b => b.disabled = true);
     showActionBurst('kd-action-done', isKill ? ['🔪','💀','🩸'] : ['💉','💚','✨']);
   }

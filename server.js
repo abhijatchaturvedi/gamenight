@@ -587,8 +587,8 @@ function kdStartNight(room) {
   else if (killer) killer.hasActedNight = true;
   if (doctor?.alive) io.to(doctor.id).emit('kd:doctor_action', { targets: alive.map(kdPub) });
   else if (doctor) doctor.hasActedNight = true;
-  const nightTime = room.settings?.nightTime ?? 45;
-  addTimer(room, () => { if (room.gameState?.phase !== 'night') return; kdAutoNight(room); kdResolveNight(room); }, nightTime * 1000);
+  const nightTime = room.settings?.nightTime ?? 90;
+  addTimer(room, () => { if (room.gameState?.phase !== 'night') return; kdAutoNight(room); checkNightDone(room); }, nightTime * 1000);
 }
 
 function kdAutoNight(room) {
@@ -600,6 +600,7 @@ function kdAutoNight(room) {
     if (targets.length) { killer.nightChoice = targets[Math.floor(Math.random()*targets.length)].id; killer.hasActedNight = true; }
   }
   if (doctor?.alive && !doctor.hasActedNight) { doctor.nightChoice = doctor.id; doctor.hasActedNight = true; }
+  alive.forEach(p => { if (!p.hasActedNight) p.hasActedNight = true; });
 }
 
 function kdResolveNight(room) {
@@ -629,10 +630,10 @@ function kdResolveNight(room) {
 
 function checkNightDone(room) {
   const gs = room.gameState; if (gs?.phase !== 'night') return;
-  const killer = kdRole(gs,'killer'), doctor = kdRole(gs,'doctor');
-  const kDone = !killer?.alive || killer.hasActedNight;
-  const dDone = !doctor?.alive || doctor.hasActedNight;
-  if (kDone && dDone) { clearTimers(room); kdResolveNight(room); }
+  if (!kdAlive(gs).every(p => p.hasActedNight)) return;
+  clearTimers(room);
+  const delay = 1000 + Math.random() * 4000;
+  addTimer(room, () => kdResolveNight(room), delay);
 }
 
 function kdStartDay(room) {
@@ -724,6 +725,9 @@ function kdAction(room, socket, data) {
       { const t=gs.playerData[data.targetId]; if (!t?.alive) return;
         pd.nightChoice=data.targetId; pd.hasActedNight=true;
         socket.emit('kd:action_confirmed',{action:'night_save'}); checkNightDone(room); } break;
+    case 'night_awake':
+      if (gs.phase!=='night'||pd.role!=='villager'||pd.hasActedNight) return;
+      pd.hasActedNight=true; checkNightDone(room); break;
     case 'vote':
       if (gs.phase!=='voting'||data.targetId===socket.id) return;
       { const t=gs.playerData[data.targetId]; if (!t?.alive) return;
