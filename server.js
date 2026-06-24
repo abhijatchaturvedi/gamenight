@@ -578,10 +578,11 @@ function tttPublic(gs) {
 
 function startKD(room) {
   const players = [...room.players.values()].sort(() => Math.random() - 0.5);
+  const numDoctors = Math.max(1, Math.floor(players.length / 5));
   const playerData = {};
   players.forEach((p, i) => {
     playerData[p.id] = { id: p.id, name: p.name, avatar: p.avatar ?? 0,
-      role: i === 0 ? 'killer' : i === 1 ? 'doctor' : 'villager',
+      role: i === 0 ? 'killer' : i <= numDoctors ? 'doctor' : 'villager',
       alive: true, hasActedNight: false, nightChoice: null, vote: null };
   });
   room.gameState = { type: 'killerdoctor', phase: 'role_reveal', playerData, round: 1, history: [] };
@@ -602,11 +603,13 @@ function kdStartNight(room) {
     livingPlayers: alive.map(kdPub),
     deadPlayers: kdDead(gs).map(kdPub),
   });
-  const killer = kdRole(gs, 'killer'), doctor = kdRole(gs, 'doctor');
+  const killer = kdRole(gs, 'killer');
   if (killer?.alive) io.to(killer.id).emit('kd:killer_action', { targets: alive.filter(p => p.id !== killer.id).map(kdPub) });
   else if (killer) killer.hasActedNight = true;
-  if (doctor?.alive) io.to(doctor.id).emit('kd:doctor_action', { targets: alive.map(kdPub) });
-  else if (doctor) doctor.hasActedNight = true;
+  kdRoles(gs, 'doctor').forEach(doctor => {
+    if (doctor.alive) io.to(doctor.id).emit('kd:doctor_action', { targets: alive.map(kdPub) });
+    else doctor.hasActedNight = true;
+  });
   const nightTime = room.settings?.nightTime ?? 90;
   addTimer(room, () => { if (room.gameState?.phase !== 'night') return; kdAutoNight(room); checkNightDone(room); }, nightTime * 1000);
 }
@@ -614,25 +617,28 @@ function kdStartNight(room) {
 function kdAutoNight(room) {
   const gs = room.gameState;
   const alive = kdAlive(gs);
-  const killer = kdRole(gs, 'killer'), doctor = kdRole(gs, 'doctor');
+  const killer = kdRole(gs, 'killer');
   if (killer?.alive && !killer.hasActedNight) {
     const targets = alive.filter(p => p.id !== killer.id);
     if (targets.length) { killer.nightChoice = targets[Math.floor(Math.random()*targets.length)].id; killer.hasActedNight = true; }
   }
-  if (doctor?.alive && !doctor.hasActedNight) { doctor.nightChoice = doctor.id; doctor.hasActedNight = true; }
+  kdRoles(gs, 'doctor').forEach(doctor => {
+    if (doctor.alive && !doctor.hasActedNight) { doctor.nightChoice = doctor.id; doctor.hasActedNight = true; }
+  });
   alive.forEach(p => { if (!p.hasActedNight) p.hasActedNight = true; });
 }
 
 function kdResolveNight(room) {
   const gs = room.gameState; gs.phase = 'night_resolution';
-  const killer = kdRole(gs,'killer'), doctor = kdRole(gs,'doctor');
-  const kChoice = killer?.nightChoice, dChoice = doctor?.alive ? doctor?.nightChoice : null;
+  const killer = kdRole(gs, 'killer');
+  const kChoice = killer?.nightChoice;
+  const dChoices = new Set(kdRoles(gs, 'doctor').filter(d => d.alive).map(d => d.nightChoice).filter(Boolean));
   let died = null, saved = false;
   if (kChoice) {
-    if (kChoice === dChoice) saved = true;
+    if (dChoices.has(kChoice)) saved = true;
     else { died = kChoice; gs.playerData[died].alive = false; }
   }
-  const msg = saved ? 'The Doctor saved someone! Nobody died last night.'
+  const msg = saved ? 'A Doctor saved someone! Nobody died last night.'
     : died ? `${gs.playerData[died].name} was found dead this morning.`
     : 'A peaceful night passed.';
   if (died) gs.history.push({ name: gs.playerData[died].name, reason: 'night_kill', round: gs.round });
@@ -768,6 +774,7 @@ function kdBroadcastNightProgress(room) {
 const kdAlive = gs => Object.values(gs.playerData).filter(p => p.alive);
 const kdDead  = gs => Object.values(gs.playerData).filter(p => !p.alive);
 const kdRole  = (gs, role) => Object.values(gs.playerData).find(p => p.role === role);
+const kdRoles = (gs, role) => Object.values(gs.playerData).filter(p => p.role === role);
 const kdPub   = p  => ({ id: p.id, name: p.name, avatar: p.avatar ?? 0 });
 
 // ─────────────────────────── SCRIBBLE ───────────────────────────
