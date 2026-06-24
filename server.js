@@ -319,7 +319,10 @@ function onPlayerDisconnect(room, sid, name) {
   switch (room.gameType) {
     case 'killerdoctor':
       if (gs.playerData?.[sid]) gs.playerData[sid].alive = false;
-      { const win = kdCheckWin(gs); if (win) { clearTimers(room); endKD(room, win); } else if (gs.phase === 'night') checkNightDone(room); }
+      { const win = kdCheckWin(gs);
+        if (win) { clearTimers(room); endKD(room, win); }
+        else if (room.players.size < 4) { clearTimers(room); endKD(room, { winner: 'abandoned', reason: 'Not enough players to continue.' }); }
+        else if (gs.phase === 'night') checkNightDone(room); }
       break;
     case 'tictactoe':
       if (gs.mode === 'tournament' && gs.players) {

@@ -527,13 +527,14 @@ const KillerDoctor = (() => {
   function onGameOver({ winner, reason, allPlayers, history }) {
     stopAmbient();
     const isVillagers = winner === 'villagers';
-    document.getElementById('kd-win-icon').textContent = isVillagers ? '🏘️' : '🔪';
-    document.getElementById('kd-win-title').textContent = isVillagers ? 'Villagers Win!' : 'Killer Wins!';
+    const isAbandoned = winner === 'abandoned';
+    document.getElementById('kd-win-icon').textContent = isAbandoned ? '🚪' : (isVillagers ? '🏘️' : '🔪');
+    document.getElementById('kd-win-title').textContent = isAbandoned ? 'Game Abandoned' : (isVillagers ? 'Villagers Win!' : 'Killer Wins!');
     document.getElementById('kd-win-reason').textContent = reason;
     document.getElementById('kd-btn-again').style.display = App.isHost ? 'inline-block' : 'none';
     document.getElementById('kd-btn-lobby').style.display = App.isHost ? 'inline-block' : 'none';
     setPhase('gameover');
-    showNightAnimation(isVillagers ? 'villagers_win' : 'killer_wins');
+    if (!isAbandoned) showNightAnimation(isVillagers ? 'villagers_win' : 'killer_wins');
     setTimeout(() => {
       document.querySelectorAll('.final-player-card').forEach(card => {
         if (card.querySelector('.fp-role.killer')) card.classList.add('kd-killer-spotlight');
