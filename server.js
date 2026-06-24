@@ -321,7 +321,7 @@ function onPlayerDisconnect(room, sid, name) {
       if (gs.playerData?.[sid]) gs.playerData[sid].alive = false;
       { const win = kdCheckWin(gs);
         if (win) { clearTimers(room); endKD(room, win); }
-        else if (room.players.size < 4) { clearTimers(room); endKD(room, { winner: 'abandoned', reason: 'Not enough players to continue.' }); }
+        else if (kdAlive(gs).length < minPlayers(room.gameType)) { clearTimers(room); endKD(room, { winner: 'abandoned', reason: 'Not enough players to continue.' }); }
         else if (gs.phase === 'night') checkNightDone(room); }
       break;
     case 'tictactoe':
