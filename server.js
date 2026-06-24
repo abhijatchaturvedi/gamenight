@@ -578,7 +578,8 @@ function tttPublic(gs) {
 
 function startKD(room) {
   const players = [...room.players.values()].sort(() => Math.random() - 0.5);
-  const numDoctors = Math.max(1, Math.floor(players.length / 5));
+  const maxDoctors = Math.max(1, Math.floor(players.length / 5));
+  const numDoctors = Math.floor(Math.random() * maxDoctors) + 1;
   const playerData = {};
   players.forEach((p, i) => {
     playerData[p.id] = { id: p.id, name: p.name, avatar: p.avatar ?? 0,
