@@ -315,7 +315,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 
 /* ═══════════════════ KILLER DOCTOR ═══════════════════ */
 #view-killerdoctor { background: var(--bg); }
-.kd-layout { display: flex; min-height: 100vh; }
+.kd-layout { display: flex; height: 100%; }
 
 .kd-sidebar {
   width: 240px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border);
@@ -333,8 +333,8 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .kd-role-card.hidden-role .role-name { color: var(--muted); }
 
 .kd-you-status { text-align: center; font-size: 0.9rem; font-weight: 600; }
-.kd-player-list-wrap { flex: 1; min-height: 0; }
-.kd-player-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 300px; }
+.kd-player-list-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.kd-player-list { flex: 1; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; min-height: 0; }
 .kd-player-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; font-size: 0.85rem; }
 .kd-player-item.dead { opacity: .4; text-decoration: line-through; }
 .kd-player-item .player-char-icon { font-size: 1.2rem; flex-shrink: 0; line-height: 1; }
@@ -346,7 +346,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .history-item { padding: 4px 0; border-bottom: 1px solid var(--border); }
 
 .kd-main { flex: 1; min-width: 0; overflow-y: auto; }
-.kd-phase { display: none; flex-direction: column; min-height: 100vh; }
+.kd-phase { display: none; flex-direction: column; height: 100%; overflow-y: auto; }
 .kd-phase.active { display: flex; }
 
 .night-bg { background: linear-gradient(180deg, #030307 0%, #0d0d1f 100%); flex: 1; display: flex; flex-direction: column; }
@@ -926,8 +926,11 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 
   /* KD layout */
   .kd-layout { flex-direction: column; }
-  .kd-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; flex-wrap: wrap; gap: 10px; max-height: 180px; padding: 12px; }
-  .kd-role-card { padding: 10px; }
+  .kd-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; flex-wrap: wrap; gap: 8px; max-height: 160px; padding: 10px 12px; overflow: hidden; flex-shrink: 0; }
+  .kd-role-card { padding: 8px 10px; }
+  .kd-player-list-wrap { min-width: 0; min-height: 0; }
+  .kd-player-list { max-height: 80px; }
+  .kd-history-wrap { display: none; }
   .day-layout { padding: 12px; gap: 10px; }
 
   /* TicTacToe */
