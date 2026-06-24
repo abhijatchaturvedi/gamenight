@@ -612,7 +612,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .toast-success { background: #065f46; border-left: 3px solid #10b981; }
 .toast-error   { background: #7f1d1d; border-left: 3px solid var(--red); }
 
-.day-layout { padding: 24px; max-width: 700px; margin: 0 auto; width: 100%; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+.day-layout { padding: 24px; max-width: 700px; margin: 0 auto; width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; }
 .day-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
 .timer-badge { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; text-align: center; min-width: 80px; }
 .timer-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
