@@ -1,6 +1,6 @@
 // ═══════════════════ AVATARS ═══════════════════
 const AVATARS = [
-  { emoji: '🧙', name: 'Wizard' },   { emoji: '🦬', name: 'Bison' },
+  { emoji: '🧙', name: 'Wizard' },   { emoji: '🐗', name: 'Boar' },
   { emoji: '🏹', name: 'Archer' },   { emoji: '🛡️', name: 'Knight' },
   { emoji: '🔮', name: 'Seer' },     { emoji: '🗡️', name: 'Rogue' },
   { emoji: '🦊', name: 'Fox' },      { emoji: '🐺', name: 'Wolf' },
@@ -27,9 +27,9 @@ const AVATARS = [
   { emoji: '🦛', name: 'Hippo' },    { emoji: '🦘', name: 'Kangaroo' },
   { emoji: '🦔', name: 'Hedgehog' }, { emoji: '🐝', name: 'Bee' },
   { emoji: '🦇', name: 'Bat' },      { emoji: '🦚', name: 'Peacock' },
-  { emoji: '🦭', name: 'Seal' },     { emoji: '🔥', name: 'Inferno' },
-  { emoji: '⚡', name: 'Bolt' },     { emoji: '🦫', name: 'Beaver' },
-  { emoji: '🦣', name: 'Mammoth' },  { emoji: '🎯', name: 'Bullseye' },
+  { emoji: '🐨', name: 'Koala' },    { emoji: '🔥', name: 'Inferno' },
+  { emoji: '⚡', name: 'Bolt' },     { emoji: '🐎', name: 'Horse' },
+  { emoji: '🐪', name: 'Camel' },    { emoji: '🎯', name: 'Bullseye' },
   { emoji: '🐆', name: 'Cheetah' },  { emoji: '🦃', name: 'Turkey' },
   { emoji: '🦢', name: 'Swan' },     { emoji: '🕊️', name: 'Dove' },
   { emoji: '🦡', name: 'Badger' },   { emoji: '🐇', name: 'Rabbit' },
@@ -49,7 +49,7 @@ const AVATARS = [
   { emoji: '❄️', name: 'Frost' },    { emoji: '🌪️', name: 'Cyclone' },
   { emoji: '🧲', name: 'Magnet' },   { emoji: '🦠', name: 'Microbe' },
   { emoji: '🐓', name: 'Rooster' },  { emoji: '🧸', name: 'Teddy' },
-  { emoji: '🌈', name: 'Rainbow' },  { emoji: '🦤', name: 'Dodo' },
+  { emoji: '🌈', name: 'Rainbow' },  { emoji: '🐹', name: 'Hamster' },
 ];
 
 // ═══════════════════ GLOBAL STATE ═══════════════════
@@ -333,7 +333,7 @@ const NAME_AVATARS = {
   'priyanshi': 23, // 🦋 Butterfly
   'khushhal': 20,  // 🐙 Octopus
   'gays': 84,      // 👻 Spook
-  'sarath': 54,    // 🦭 Seal
+  'sarath': 54,    // 🐨 Koala
 };
 
 function selectAvatar(idx) {
