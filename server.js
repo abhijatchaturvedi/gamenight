@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const os = require('os');
+const { Bonjour } = require('bonjour-service');
 
 const app = express();
 const server = http.createServer(app);
@@ -922,10 +923,17 @@ const scribblePlayers = room => {
 // ─────────────────────────── START ───────────────────────────
 
 const PORT = process.env.PORT || 3000;
+const MDNS_HOST = 'gamenight.local';
+
 server.listen(PORT, '0.0.0.0', () => {
-  const ips = getLocalIPs();
+  const bonjour = new Bonjour();
+  bonjour.publish({ name: 'GameNight', type: 'http', port: Number(PORT), host: MDNS_HOST });
+
   console.log('\n🎮  GameNight is live!\n');
   console.log(`  Local:    http://localhost:${PORT}`);
-  ips.forEach(ip => console.log(`  Network:  http://${ip}:${PORT}  ← share with friends!`));
+  console.log(`  Network:  http://${MDNS_HOST}:${PORT}  ← share with friends!`);
   console.log('\n  Open in any browser on the same WiFi / LAN.\n');
+
+  process.on('SIGINT', () => bonjour.unpublishAll(() => process.exit()));
+  process.on('SIGTERM', () => bonjour.unpublishAll(() => process.exit()));
 });
