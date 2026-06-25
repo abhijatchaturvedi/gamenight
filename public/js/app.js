@@ -85,6 +85,7 @@ const SETTINGS_SCHEMA = {
     { id: 'bestOf', label: 'Match Format', default: 0,
       options: [{v:0,l:'Free Play ★'},{v:3,l:'Best of 3'},{v:5,l:'Best of 5'},{v:7,l:'Best of 7'}] },
   ],
+  uno: [],
 };
 
 // ═══════════════════ VIEW MANAGEMENT ═══════════════════
@@ -523,7 +524,7 @@ function renderLobby({ players, code, gameType, hostId, minPlayers, settings, se
   App.isHost = hostId === App.myId;
   App.currentSettings = settings || {};
 
-  const gameNames = { tictactoe: 'Tic Tac Toe', killerdoctor: 'Mongolpuri', scribble: 'Scribble' };
+  const gameNames = { tictactoe: 'Tic Tac Toe', killerdoctor: 'Mongolpuri', scribble: 'Scribble', uno: 'UNO' };
   document.getElementById('lobby-title').textContent = gameNames[gameType] || 'Lobby';
   document.getElementById('lobby-code').textContent = code;
 
@@ -642,6 +643,10 @@ App.socket.on('ttt:player_left',  data  =>   TicTacToe.onPlayerLeft(data));
 App.socket.on('ttt:tournament_state', data => { showView('tictactoe'); });  // handled inside TicTacToe module
 App.socket.on('scribble:game_start', data => { showView('scribble');  Scribble.onStart(data); });
 App.socket.on('scribble:reconnect',  data => { showView('scribble');  Scribble.onReconnect(data); });
+App.socket.on('uno:state',       data  => { showView('uno');         UNO.onState(data); });
+App.socket.on('uno:hand',        data  =>   UNO.onHand(data));
+App.socket.on('uno:choose_color',()    =>   UNO.onChooseColor());
+App.socket.on('uno:game_over',   data  =>   UNO.onGameOver(data));
 App.socket.on('kd:reconnect',    data  => {
   if (data.avatar !== undefined) App.myAvatar = data.avatar;
   showView('killerdoctor');
@@ -658,4 +663,5 @@ document.addEventListener('DOMContentLoaded', () => {
   TicTacToe.init();
   KillerDoctor.init();
   Scribble.init();
+  UNO.init();
 });

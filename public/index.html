@@ -37,6 +37,12 @@
         <p>Draw and guess words</p>
         <span class="badge">3+ players</span>
       </div>
+      <div class="game-card" data-game="uno">
+        <div class="game-icon">🃏</div>
+        <h3>UNO</h3>
+        <p>Classic card game</p>
+        <span class="badge">2–10 players</span>
+      </div>
     </div>
   </div>
 
@@ -437,6 +443,72 @@
   </div>
 </div>
 
+<!-- ══════════════════════ UNO ══════════════════════ -->
+<div id="view-uno" class="view">
+  <div class="uno-layout">
+
+    <div class="uno-header">
+      <h2>UNO</h2>
+      <button class="btn-exit btn-sm" id="uno-btn-exit">🚪 Exit</button>
+    </div>
+
+    <div id="uno-opponents" class="uno-opponents"></div>
+
+    <div class="uno-game-area">
+      <div class="uno-pile-wrap">
+        <div class="uno-card uno-card-big card-back" id="uno-deck-card">
+          <span id="uno-deck-count"></span>
+        </div>
+        <div class="uno-area-label">Draw</div>
+      </div>
+      <div class="uno-pile-wrap">
+        <div id="uno-discard-card" class="uno-card uno-card-big"></div>
+        <div class="uno-area-label uno-color-row">
+          <span id="uno-color-dot" class="uno-color-dot"></span>
+          <span id="uno-color-name"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="uno-status" class="uno-status"></div>
+
+    <div class="uno-hand-section">
+      <div id="uno-hand" class="uno-hand"></div>
+      <div class="uno-action-bar">
+        <button id="uno-btn-draw" class="btn-primary hidden">Draw Card</button>
+        <button id="uno-btn-pass" class="btn-ghost hidden">Pass</button>
+      </div>
+    </div>
+
+    <!-- Color chooser -->
+    <div id="uno-color-chooser" class="uno-overlay-modal hidden">
+      <div class="uno-modal-box">
+        <h3>Choose a color</h3>
+        <div class="uno-color-grid">
+          <button class="uno-color-btn uno-cb-red"    data-color="red">Red</button>
+          <button class="uno-color-btn uno-cb-yellow" data-color="yellow">Yellow</button>
+          <button class="uno-color-btn uno-cb-green"  data-color="green">Green</button>
+          <button class="uno-color-btn uno-cb-blue"   data-color="blue">Blue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game over -->
+    <div id="uno-gameover" class="uno-overlay-modal hidden">
+      <div class="uno-modal-box uno-gameover-box">
+        <div class="phase-icon anim-pop">🏆</div>
+        <h2 id="uno-gameover-title"></h2>
+        <div id="uno-gameover-scores" class="uno-gameover-scores"></div>
+        <div class="gameover-actions">
+          <button id="uno-btn-again" class="btn-primary btn-lg hidden">Play Again</button>
+          <button id="uno-btn-lobby" class="btn-ghost hidden">Back to Lobby</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- ══════════════════════ RULES MODAL ══════════════════════ -->
 <div id="rules-modal" class="modal-overlay hidden">
   <div class="modal-box">
@@ -448,6 +520,7 @@
       <button class="rules-tab active" data-game="killerdoctor">🔪 Mongolpuri</button>
       <button class="rules-tab" data-game="tictactoe">⭕ Tic Tac Toe</button>
       <button class="rules-tab" data-game="scribble">🎨 Scribble</button>
+      <button class="rules-tab" data-game="uno">🃏 UNO</button>
     </div>
 
     <!-- Killer Doctor Rules -->
@@ -539,6 +612,45 @@
 
       <div class="rules-tip">💡 <strong>Tip:</strong> Once you guess correctly you can't chat — don't spoil it for others!</div>
     </div>
+
+    <!-- UNO Rules -->
+    <div id="rules-uno" class="rules-content">
+      <p class="rules-intro">Classic card-matching game. Be the first to empty your hand and shout UNO when you're down to one card!</p>
+
+      <h3>🃏 Card Types</h3>
+      <div class="rules-role-cards">
+        <div class="rules-role-card">
+          <div class="rules-role-icon">🔢</div>
+          <div class="rules-role-name">Numbers (0–9)</div>
+          <div class="rules-role-desc">Play on a matching color or matching number.</div>
+        </div>
+        <div class="rules-role-card">
+          <div class="rules-role-icon">⚡</div>
+          <div class="rules-role-name">Action Cards</div>
+          <div class="rules-role-desc"><strong>Skip</strong> — next player loses turn.<br><strong>Reverse</strong> — reverses play order (2-player: acts as Skip).<br><strong>+2</strong> — next player draws 2 and loses turn.</div>
+        </div>
+        <div class="rules-role-card">
+          <div class="rules-role-icon">🌈</div>
+          <div class="rules-role-name">Wild Cards</div>
+          <div class="rules-role-desc"><strong>Wild</strong> — change to any color.<br><strong>Wild +4</strong> — change color AND next player draws 4 and loses turn.</div>
+        </div>
+      </div>
+
+      <h3>🔄 How to Play</h3>
+      <div class="rules-steps">
+        <div class="rules-step"><span class="step-num">1</span><div>Each player is dealt <strong>7 cards</strong>. The top card of the deck is flipped to start the discard pile.</div></div>
+        <div class="rules-step"><span class="step-num">2</span><div>On your turn, play a card that <strong>matches the color or value</strong> of the top card. Wild cards can always be played.</div></div>
+        <div class="rules-step"><span class="step-num">3</span><div>Can't play? <strong>Draw one card</strong> from the deck. If the drawn card is playable, you may play it immediately or pass.</div></div>
+        <div class="rules-step"><span class="step-num">4</span><div>When you play down to <strong>1 card</strong>, the game automatically shouts UNO for you!</div></div>
+        <div class="rules-step"><span class="step-num">5</span><div>First player to play all their cards <strong>wins the game</strong>.</div></div>
+      </div>
+
+      <h3>🏆 Win Condition</h3>
+      <div class="rules-wins">
+        <div class="rules-win-card"><span class="win-icon">🃏</span><strong>Play all your cards</strong> to win. Other players' remaining cards don't score — it's a pure race.</div>
+      </div>
+      <div class="rules-tip">💡 <strong>Tip:</strong> Wild +4 can only be played if you have no other matching card — but this isn't enforced digitally.</div>
+    </div>
   </div>
 </div>
 
@@ -565,5 +677,6 @@
 <script src="js/tictactoe.js"></script>
 <script src="js/killerdoctor.js"></script>
 <script src="js/scribble.js"></script>
+<script src="js/uno.js"></script>
 </body>
 </html>

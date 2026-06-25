@@ -21,6 +21,7 @@ function defaultSettings(gameType) {
     case 'scribble':     return { drawTime: 45, rounds: 3, wordChoices: 3 };
     case 'killerdoctor': return { discussionTime: 45, votingTime: 45, nightTime: 45 };
     case 'tictactoe':    return { bestOf: 0 };
+    case 'uno':          return {};
     default:             return {};
   }
 }
@@ -59,7 +60,7 @@ function uniqueCode() { let c; do { c = genCode(); } while (rooms.has(c)); retur
 function getRoom(sid) { const code = playerRooms.get(sid); return code ? rooms.get(code) : null; }
 function clearTimers(room) { (room.timers||[]).forEach(clearTimeout); room.timers = []; }
 function addTimer(room, fn, ms) { if (!room.timers) room.timers = []; const t = setTimeout(fn, ms); room.timers.push(t); return t; }
-function minPlayers(g) { return { tictactoe: 2, killerdoctor: 4, scribble: 3 }[g] ?? 2; }
+function minPlayers(g) { return { tictactoe: 2, killerdoctor: 4, scribble: 3, uno: 2 }[g] ?? 2; }
 
 function broadcastLobby(room) {
   io.to(room.code).emit('lobby:update', {
@@ -180,7 +181,7 @@ io.on('connection', socket => {
     }
     room.status = 'playing';
     io.to(room.code).emit('game:starting');
-    addTimer(room, () => ({ tictactoe: startTTT, killerdoctor: startKD, scribble: startScribble })[room.gameType]?.(room), 3200);
+    addTimer(room, () => ({ tictactoe: startTTT, killerdoctor: startKD, scribble: startScribble, uno: startUno })[room.gameType]?.(room), 3200);
   });
 
   socket.on('game:action', data => {
@@ -259,6 +260,10 @@ function sendReconnectState(room, socket) {
         players: scribblePlayers(room), round: gs.round, maxRounds: gs.maxRounds,
       });
       break;
+    case 'uno':
+      socket.emit('uno:state', unoPublic(gs));
+      if (gs.hands[socket.id]) socket.emit('uno:hand', { hand: gs.hands[socket.id] });
+      break;
   }
 }
 
@@ -267,7 +272,7 @@ function restartGame(room) {
   room.status = 'playing';
   room.gameState = null;
   io.to(room.code).emit('game:starting');
-  addTimer(room, () => ({ tictactoe: startTTT, killerdoctor: startKD, scribble: startScribble })[room.gameType]?.(room), 3200);
+  addTimer(room, () => ({ tictactoe: startTTT, killerdoctor: startKD, scribble: startScribble, uno: startUno })[room.gameType]?.(room), 3200);
 }
 
 function handleAction(room, socket, data) {
@@ -279,6 +284,7 @@ function handleAction(room, socket, data) {
       break;
     case 'killerdoctor': kdAction(room, socket, data); break;
     case 'scribble':     scribbleAction(room, socket, data); break;
+    case 'uno':          unoAction(room, socket, data); break;
   }
 }
 
@@ -352,6 +358,31 @@ function onPlayerDisconnect(room, sid, name) {
       else if ((gs.phase === 'drawing' || gs.phase === 'choosing') && sid === gs.drawerOrder[gs.drawerIndex]) {
         clearTimers(room); endScribbleRound(room, false);
       }
+      break;
+    }
+    case 'uno': {
+      const idx = gs.playerOrder.indexOf(sid);
+      if (idx === -1) break;
+      const wasCurrentPlayer = gs.currentPlayerIndex === idx;
+      gs.playerOrder.splice(idx, 1);
+      delete gs.hands[sid];
+      delete gs.unoSaid[sid];
+      if (gs.playerOrder.length < 2) {
+        if (gs.playerOrder.length === 1) endUno(room, gs.playerOrder[0]);
+        break;
+      }
+      if (idx < gs.currentPlayerIndex) {
+        gs.currentPlayerIndex--;
+      } else if (idx === gs.currentPlayerIndex && gs.currentPlayerIndex >= gs.playerOrder.length) {
+        gs.currentPlayerIndex = 0;
+      }
+      if (wasCurrentPlayer && gs.phase === 'choose_color') {
+        gs.currentColor = UNO_COLORS[Math.floor(Math.random() * 4)];
+        gs.phase = 'playing';
+      }
+      gs.awaitingPass = false;
+      gs.drawnCardIndex = -1;
+      io.to(room.code).emit('uno:state', unoPublic(gs));
       break;
     }
   }
@@ -919,6 +950,245 @@ const scribblePlayers = room => {
   const gs = room.gameState;
   return [...room.players.values()].map(p => ({ id:p.id, name:p.name, score:gs?.scores?.[p.id]||0 }));
 };
+
+// ─────────────────────────── UNO ───────────────────────────
+
+const UNO_COLORS = ['red', 'yellow', 'green', 'blue'];
+
+function buildUnoDeck() {
+  const deck = [];
+  for (const color of UNO_COLORS) {
+    deck.push({ color, value: '0' });
+    for (let n = 1; n <= 9; n++) {
+      deck.push({ color, value: String(n) }, { color, value: String(n) });
+    }
+    for (const v of ['skip', 'reverse', 'draw2']) {
+      deck.push({ color, value: v }, { color, value: v });
+    }
+  }
+  for (let i = 0; i < 4; i++) {
+    deck.push({ color: 'wild', value: 'wild' });
+    deck.push({ color: 'wild', value: 'wild4' });
+  }
+  return deck;
+}
+
+function shuffleArr(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function unoNextIdx(gs, steps) {
+  const n = gs.playerOrder.length;
+  return ((gs.currentPlayerIndex + gs.direction * steps) % n + n) % n;
+}
+
+function unoCanPlay(card, topCard, currentColor) {
+  if (card.color === 'wild') return true;
+  if (card.color === currentColor) return true;
+  if (topCard && card.value === topCard.value) return true;
+  return false;
+}
+
+function unoDrawN(gs, playerId, n) {
+  for (let i = 0; i < n; i++) {
+    if (gs.deck.length === 0) {
+      if (gs.discardPile.length > 1) {
+        const top = gs.discardPile.pop();
+        gs.deck = shuffleArr(gs.discardPile);
+        gs.discardPile = [top];
+      } else break;
+    }
+    if (gs.deck.length > 0) gs.hands[playerId].push(gs.deck.shift());
+  }
+}
+
+function unoPublic(gs) {
+  return {
+    discardTop: gs.discardPile[gs.discardPile.length - 1] || null,
+    currentColor: gs.currentColor,
+    currentPlayerId: gs.playerOrder[gs.currentPlayerIndex],
+    direction: gs.direction,
+    phase: gs.phase,
+    awaitingPass: gs.awaitingPass,
+    playerOrder: gs.playerOrder,
+    cardCounts: Object.fromEntries(gs.playerOrder.map(id => [id, gs.hands[id]?.length ?? 0])),
+    players: gs.players,
+    unoSaid: gs.unoSaid,
+    lastAction: gs.lastAction,
+    deckCount: gs.deck.length,
+  };
+}
+
+function startUno(room) {
+  const players = [...room.players.values()].sort(() => Math.random() - 0.5);
+  const deck = shuffleArr(buildUnoDeck());
+  const hands = {};
+  players.forEach(p => { hands[p.id] = []; });
+  for (let i = 0; i < 7; i++) players.forEach(p => hands[p.id].push(deck.shift()));
+
+  let startCard = deck.shift();
+  while (startCard.color === 'wild') { deck.push(startCard); shuffleArr(deck); startCard = deck.shift(); }
+
+  const playerOrder = players.map(p => p.id);
+  room.gameState = {
+    type: 'uno', deck, discardPile: [startCard],
+    currentColor: startCard.color,
+    playerOrder, currentPlayerIndex: 0, direction: 1,
+    phase: 'playing', awaitingPass: false, drawnCardIndex: -1,
+    hands, unoSaid: {}, lastAction: null,
+    players: Object.fromEntries(players.map(p => [p.id, { id: p.id, name: p.name, avatar: p.avatar ?? 0 }])),
+  };
+
+  const gs = room.gameState;
+  if (startCard.value === 'skip') {
+    gs.currentPlayerIndex = unoNextIdx(gs, 1);
+    io.to(room.code).emit('notification', `Starting card: Skip! ${players[0].name} loses first turn.`);
+  } else if (startCard.value === 'reverse') {
+    if (playerOrder.length > 2) gs.direction = -1;
+    io.to(room.code).emit('notification', `Starting card: Reverse! Play order changed.`);
+  } else if (startCard.value === 'draw2') {
+    unoDrawN(gs, playerOrder[0], 2);
+    gs.currentPlayerIndex = unoNextIdx(gs, 1);
+    io.to(room.code).emit('notification', `Starting card: Draw Two! ${players[0].name} draws 2.`);
+  }
+
+  io.to(room.code).emit('uno:state', unoPublic(gs));
+  players.forEach(p => io.to(p.id).emit('uno:hand', { hand: gs.hands[p.id] }));
+}
+
+function unoAction(room, socket, data) {
+  const gs = room.gameState;
+  if (!gs || gs.phase === 'game_over') return;
+  switch (data.action) {
+    case 'play_card':    unoPlayCard(room, socket, data.cardIndex); break;
+    case 'draw':         unoDrawCard(room, socket); break;
+    case 'pass':         unoPass(room, socket); break;
+    case 'choose_color': unoChooseColor(room, socket, data.color); break;
+  }
+}
+
+function unoPlayCard(room, socket, cardIndex) {
+  const gs = room.gameState;
+  if (socket.id !== gs.playerOrder[gs.currentPlayerIndex] || gs.phase !== 'playing') return;
+  if (gs.awaitingPass && cardIndex !== gs.drawnCardIndex) return;
+  const hand = gs.hands[socket.id];
+  if (!Number.isInteger(cardIndex) || cardIndex < 0 || cardIndex >= hand.length) return;
+  const card = hand[cardIndex];
+  const topCard = gs.discardPile[gs.discardPile.length - 1];
+  if (!unoCanPlay(card, topCard, gs.currentColor)) return;
+
+  hand.splice(cardIndex, 1);
+  gs.discardPile.push(card);
+  if (card.color !== 'wild') gs.currentColor = card.color;
+  gs.awaitingPass = false; gs.drawnCardIndex = -1;
+  gs.lastAction = { type: 'play', playerId: socket.id, card };
+
+  if (hand.length === 1) {
+    gs.unoSaid[socket.id] = true;
+    io.to(room.code).emit('notification', `${gs.players[socket.id]?.name} says UNO!`);
+  } else if (hand.length > 1) {
+    gs.unoSaid[socket.id] = false;
+  }
+
+  io.to(socket.id).emit('uno:hand', { hand });
+
+  if (hand.length === 0) {
+    io.to(room.code).emit('uno:state', unoPublic(gs));
+    endUno(room, socket.id);
+    return;
+  }
+
+  if (card.value === 'wild' || card.value === 'wild4') {
+    gs.phase = 'choose_color';
+    io.to(room.code).emit('uno:state', unoPublic(gs));
+    io.to(socket.id).emit('uno:choose_color');
+    return;
+  }
+
+  if (card.value === 'reverse') {
+    gs.direction *= -1;
+    gs.currentPlayerIndex = unoNextIdx(gs, gs.playerOrder.length === 2 ? 2 : 1);
+  } else if (card.value === 'skip') {
+    gs.currentPlayerIndex = unoNextIdx(gs, 2);
+  } else if (card.value === 'draw2') {
+    const nextIdx = unoNextIdx(gs, 1), nextId = gs.playerOrder[nextIdx];
+    unoDrawN(gs, nextId, 2);
+    io.to(nextId).emit('uno:hand', { hand: gs.hands[nextId] });
+    io.to(room.code).emit('notification', `${gs.players[nextId]?.name} draws 2!`);
+    gs.currentPlayerIndex = unoNextIdx(gs, 2);
+  } else {
+    gs.currentPlayerIndex = unoNextIdx(gs, 1);
+  }
+
+  io.to(room.code).emit('uno:state', unoPublic(gs));
+}
+
+function unoDrawCard(room, socket) {
+  const gs = room.gameState;
+  if (socket.id !== gs.playerOrder[gs.currentPlayerIndex] || gs.phase !== 'playing' || gs.awaitingPass) return;
+  unoDrawN(gs, socket.id, 1);
+  const drawnIndex = gs.hands[socket.id].length - 1;
+  if (drawnIndex < 0) return;
+  const drawnCard = gs.hands[socket.id][drawnIndex];
+  const topCard = gs.discardPile[gs.discardPile.length - 1];
+  const canPlay = unoCanPlay(drawnCard, topCard, gs.currentColor);
+  gs.lastAction = { type: 'draw', playerId: socket.id };
+  if (canPlay) {
+    gs.awaitingPass = true;
+    gs.drawnCardIndex = drawnIndex;
+    io.to(socket.id).emit('uno:hand', { hand: gs.hands[socket.id], drawnIndex, canPlayDrawn: true });
+  } else {
+    gs.awaitingPass = false; gs.drawnCardIndex = -1;
+    gs.currentPlayerIndex = unoNextIdx(gs, 1);
+    io.to(socket.id).emit('uno:hand', { hand: gs.hands[socket.id], drawnIndex, canPlayDrawn: false });
+  }
+  io.to(room.code).emit('uno:state', unoPublic(gs));
+}
+
+function unoPass(room, socket) {
+  const gs = room.gameState;
+  if (socket.id !== gs.playerOrder[gs.currentPlayerIndex] || !gs.awaitingPass) return;
+  gs.awaitingPass = false; gs.drawnCardIndex = -1;
+  gs.currentPlayerIndex = unoNextIdx(gs, 1);
+  gs.lastAction = { type: 'pass', playerId: socket.id };
+  io.to(room.code).emit('uno:state', unoPublic(gs));
+}
+
+function unoChooseColor(room, socket, color) {
+  const gs = room.gameState;
+  if (socket.id !== gs.playerOrder[gs.currentPlayerIndex] || gs.phase !== 'choose_color') return;
+  if (!UNO_COLORS.includes(color)) return;
+  gs.currentColor = color;
+  gs.phase = 'playing';
+  gs.lastAction = { type: 'color', playerId: socket.id, color };
+  const topCard = gs.discardPile[gs.discardPile.length - 1];
+  if (topCard.value === 'wild4') {
+    const nextIdx = unoNextIdx(gs, 1), nextId = gs.playerOrder[nextIdx];
+    unoDrawN(gs, nextId, 4);
+    io.to(nextId).emit('uno:hand', { hand: gs.hands[nextId] });
+    io.to(room.code).emit('notification', `${gs.players[nextId]?.name} draws 4!`);
+    gs.currentPlayerIndex = unoNextIdx(gs, 2);
+  } else {
+    gs.currentPlayerIndex = unoNextIdx(gs, 1);
+  }
+  io.to(room.code).emit('uno:state', unoPublic(gs));
+}
+
+function endUno(room, winnerId) {
+  const gs = room.gameState;
+  gs.phase = 'game_over';
+  room.status = 'ended';
+  recordResult(room, [winnerId], gs.playerOrder);
+  io.to(room.code).emit('uno:game_over', {
+    winnerId, winnerName: gs.players[winnerId]?.name,
+    scores: Object.fromEntries(gs.playerOrder.map(id => [id, gs.hands[id]?.length ?? 0])),
+    players: gs.players,
+  });
+}
 
 // ─────────────────────────── START ───────────────────────────
 
