@@ -1214,23 +1214,21 @@ const QUIZ_REVEAL_MS = 4000;
 
 async function fetchQuizQuestions() {
   const decode = s => decodeURIComponent(s);
-  const questions = [];
-  for (const diff of ['easy', 'medium', 'hard']) {
-    if (questions.length > 0) await new Promise(r => setTimeout(r, 1100));
-    const res = await fetch(`https://opentdb.com/api.php?amount=5&difficulty=${diff}&type=multiple&encode=url3986`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    if (json.response_code !== 0) throw new Error(`OpenTDB code ${json.response_code}`);
-    for (const q of json.results) {
+  const res = await fetch('https://opentdb.com/api.php?amount=15&type=multiple&encode=url3986');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  if (json.response_code !== 0) throw new Error(`OpenTDB code ${json.response_code}`);
+  const diffOrder = { easy: 0, medium: 1, hard: 2 };
+  return json.results
+    .sort((a, b) => (diffOrder[a.difficulty] ?? 0) - (diffOrder[b.difficulty] ?? 0))
+    .map(q => {
       const options = [decode(q.correct_answer), ...q.incorrect_answers.map(decode)];
       for (let i = options.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [options[i], options[j]] = [options[j], options[i]];
       }
-      questions.push({ question: decode(q.question), correctAnswer: decode(q.correct_answer), options, difficulty: diff });
-    }
-  }
-  return questions;
+      return { question: decode(q.question), correctAnswer: decode(q.correct_answer), options, difficulty: q.difficulty };
+    });
 }
 
 async function startQuiz(room) {
