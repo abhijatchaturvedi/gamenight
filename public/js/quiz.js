@@ -31,20 +31,23 @@ const QUIZ = (() => {
     const prevPhase = state?.phase;
     state = newState;
 
-    if (newState.phase === 'question' && (prevPhase !== 'question' || prevQ !== newState.questionIndex)) {
-      myAnswer = null;
+    document.getElementById('quiz-gameover').classList.add('hidden');
+
+    if (newState.phase === 'loading') {
+      stopTimer();
+      renderLoading();
+      return;
     }
 
-    document.getElementById('quiz-gameover').classList.add('hidden');
+    if (newState.phase === 'question' && (prevPhase !== 'question' || prevQ !== newState.questionIndex)) {
+      myAnswer = null;
+      startTimer();
+    }
 
     if (newState.phase === 'gameover') {
       stopTimer();
       renderGameOver();
       return;
-    }
-
-    if (newState.phase === 'question' && (prevPhase !== 'question' || prevQ !== newState.questionIndex)) {
-      startTimer();
     }
 
     render();
@@ -57,6 +60,21 @@ const QUIZ = (() => {
   }
 
   // ─── Render ─────────────────────────────────────────────────
+
+  function renderLoading() {
+    document.getElementById('quiz-question').textContent = 'Fetching questions…';
+    document.getElementById('quiz-answer-status').textContent = 'This may take a few seconds';
+    document.getElementById('quiz-answer-status').className = 'quiz-answer-status';
+    document.getElementById('quiz-score-delta').classList.add('hidden');
+    document.getElementById('quiz-scoreboard').classList.add('hidden');
+    document.getElementById('quiz-timer-bar').style.width = '0%';
+    document.getElementById('quiz-timer-num').textContent = '';
+    document.querySelectorAll('.quiz-opt').forEach(btn => {
+      btn.textContent = '';
+      btn.disabled = true;
+      btn.className = btn.className.replace(/opt-\S+/g, '').trim();
+    });
+  }
 
   function render() {
     if (!state) return;

@@ -182,7 +182,6 @@ io.on('connection', socket => {
     }
     room.status = 'playing';
     io.to(room.code).emit('game:starting');
-    if (room.gameType === 'quiz') room._quizFetch = fetchQuizQuestions().catch(() => null);
     addTimer(room, () => ({ tictactoe: startTTT, killerdoctor: startKD, scribble: startScribble, uno: startUno, quiz: startQuiz })[room.gameType]?.(room), 3200);
   });
 
@@ -267,6 +266,7 @@ function sendReconnectState(room, socket) {
       if (gs.hands[socket.id]) socket.emit('uno:hand', { hand: gs.hands[socket.id] });
       break;
     case 'quiz':
+      if (gs.phase === 'loading') { socket.emit('quiz:state', { phase: 'loading' }); break; }
       socket.emit('quiz:state', quizPublic(gs, room));
       if (gs.phase === 'question' && gs.answers[socket.id])
         socket.emit('quiz:answered', { answer: gs.answers[socket.id].answer });
@@ -279,7 +279,6 @@ function restartGame(room) {
   room.status = 'playing';
   room.gameState = null;
   io.to(room.code).emit('game:starting');
-  if (room.gameType === 'quiz') room._quizFetch = fetchQuizQuestions().catch(() => null);
   addTimer(room, () => ({ tictactoe: startTTT, killerdoctor: startKD, scribble: startScribble, uno: startUno, quiz: startQuiz })[room.gameType]?.(room), 3200);
 }
 
@@ -1214,38 +1213,50 @@ const QUIZ_REVEAL_MS = 4000;
 
 async function fetchQuizQuestions() {
   const decode = s => decodeURIComponent(s);
-  const res = await fetch('https://opentdb.com/api.php?amount=15&type=multiple&encode=url3986');
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  if (json.response_code !== 0) throw new Error(`OpenTDB code ${json.response_code}`);
   const diffOrder = { easy: 0, medium: 1, hard: 2 };
-  return json.results
-    .sort((a, b) => (diffOrder[a.difficulty] ?? 0) - (diffOrder[b.difficulty] ?? 0))
-    .map(q => {
-      const options = [decode(q.correct_answer), ...q.incorrect_answers.map(decode)];
-      for (let i = options.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [options[i], options[j]] = [options[j], options[i]];
-      }
-      return { question: decode(q.question), correctAnswer: decode(q.correct_answer), options, difficulty: q.difficulty };
-    });
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (attempt > 0) await new Promise(r => setTimeout(r, 6000));
+    const res = await fetch('https://opentdb.com/api.php?amount=15&type=multiple&encode=url3986');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (json.response_code === 5) continue; // rate limited — retry after delay
+    if (json.response_code !== 0) throw new Error(`OpenTDB code ${json.response_code}`);
+    return json.results
+      .sort((a, b) => (diffOrder[a.difficulty] ?? 0) - (diffOrder[b.difficulty] ?? 0))
+      .map(q => {
+        const options = [decode(q.correct_answer), ...q.incorrect_answers.map(decode)];
+        for (let i = options.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [options[i], options[j]] = [options[j], options[i]];
+        }
+        return { question: decode(q.question), correctAnswer: decode(q.correct_answer), options, difficulty: q.difficulty };
+      });
+  }
+  throw new Error('Rate limited after retries');
 }
 
 async function startQuiz(room) {
+  if (room.status !== 'playing') return;
+  const scores = {};
+  [...room.players.keys()].forEach(id => { scores[id] = 0; });
+  room.gameState = { type: 'quiz', questions: [], currentQ: 0, phase: 'loading', answers: {}, results: null, scores, questionStartTime: 0 };
+  io.to(room.code).emit('quiz:state', { phase: 'loading' });
   try {
-    let questions = await (room._quizFetch ?? fetchQuizQuestions());
-    delete room._quizFetch;
-    if (!questions) questions = await fetchQuizQuestions();
+    const questions = await fetchQuizQuestions();
     if (room.status !== 'playing') return;
-    const scores = {};
-    [...room.players.keys()].forEach(id => { scores[id] = 0; });
-    room.gameState = { type: 'quiz', questions, currentQ: 0, phase: 'question', answers: {}, results: null, scores, questionStartTime: Date.now() };
+    room.gameState.questions = questions;
+    room.gameState.phase = 'question';
+    room.gameState.questionStartTime = Date.now();
     io.to(room.code).emit('quiz:state', quizPublic(room.gameState, room));
     addTimer(room, () => quizReveal(room), QUIZ_TIME_MS);
   } catch (e) {
     console.error('Quiz start failed:', e);
-    delete room._quizFetch;
-    if (rooms.has(room.code)) { room.status = 'lobby'; io.to(room.code).emit('notification', 'Failed to load questions. Please try again.'); broadcastLobby(room); }
+    if (rooms.has(room.code)) {
+      room.status = 'lobby';
+      io.to(room.code).emit('game:back_to_lobby');
+      io.to(room.code).emit('notification', 'Failed to load questions — check your internet connection.');
+      broadcastLobby(room);
+    }
   }
 }
 
