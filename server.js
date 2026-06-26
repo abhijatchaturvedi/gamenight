@@ -22,7 +22,7 @@ function defaultSettings(gameType) {
     case 'killerdoctor': return { discussionTime: 45, votingTime: 45, nightTime: 45 };
     case 'tictactoe':    return { bestOf: 0 };
     case 'uno':          return {};
-    case 'quiz':         return {};
+    case 'quiz':         return { numQuestions: 15, timePerQuestion: 20 };
     default:             return {};
   }
 }
@@ -44,6 +44,10 @@ function validateSettings(incoming, gameType) {
       break;
     case 'tictactoe':
       if ([0,3,5,7].includes(n('bestOf')))      out.bestOf = n('bestOf');
+      break;
+    case 'quiz':
+      if ([10,15,20,25].includes(n('numQuestions')))  out.numQuestions    = n('numQuestions');
+      if ([10,15,20,30].includes(n('timePerQuestion'))) out.timePerQuestion = n('timePerQuestion');
       break;
   }
   return out;
@@ -370,6 +374,7 @@ function onPlayerDisconnect(room, sid, name) {
     }
     case 'quiz': {
       delete gs.scores[sid];
+      delete gs.correctCounts?.[sid];
       if (gs.phase === 'question' && room.players.size > 0) {
         const answered = [...room.players.keys()].filter(id => gs.answers[id]).length;
         if (answered >= room.players.size) { clearTimers(room); quizReveal(room); }
@@ -1208,18 +1213,17 @@ function endUno(room, winnerId) {
 
 // ─────────────────────────── QUIZ ───────────────────────────
 
-const QUIZ_TIME_MS = 20000;
 const QUIZ_REVEAL_MS = 4000;
 
-async function fetchQuizQuestions() {
+async function fetchQuizQuestions(n = 15) {
   const decode = s => decodeURIComponent(s);
   const diffOrder = { easy: 0, medium: 1, hard: 2 };
   for (let attempt = 0; attempt < 4; attempt++) {
     if (attempt > 0) await new Promise(r => setTimeout(r, 6000));
-    const res = await fetch('https://opentdb.com/api.php?amount=15&type=multiple&encode=url3986');
+    const res = await fetch(`https://opentdb.com/api.php?amount=${n}&type=multiple&encode=url3986`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
-    if (json.response_code === 5) continue; // rate limited — retry after delay
+    if (json.response_code === 5) continue;
     if (json.response_code !== 0) throw new Error(`OpenTDB code ${json.response_code}`);
     return json.results
       .sort((a, b) => (diffOrder[a.difficulty] ?? 0) - (diffOrder[b.difficulty] ?? 0))
@@ -1237,18 +1241,21 @@ async function fetchQuizQuestions() {
 
 async function startQuiz(room) {
   if (room.status !== 'playing') return;
+  const numQ        = room.settings?.numQuestions    ?? 15;
+  const timeLimitMs = (room.settings?.timePerQuestion ?? 20) * 1000;
   const scores = {};
-  [...room.players.keys()].forEach(id => { scores[id] = 0; });
-  room.gameState = { type: 'quiz', questions: [], currentQ: 0, phase: 'loading', answers: {}, results: null, scores, questionStartTime: 0 };
+  const correctCounts = {};
+  [...room.players.keys()].forEach(id => { scores[id] = 0; correctCounts[id] = 0; });
+  room.gameState = { type: 'quiz', questions: [], currentQ: 0, phase: 'loading', answers: {}, results: null, scores, correctCounts, timeLimitMs, questionStartTime: 0 };
   io.to(room.code).emit('quiz:state', { phase: 'loading' });
   try {
-    const questions = await fetchQuizQuestions();
+    const questions = await fetchQuizQuestions(numQ);
     if (room.status !== 'playing') return;
     room.gameState.questions = questions;
     room.gameState.phase = 'question';
     room.gameState.questionStartTime = Date.now();
     io.to(room.code).emit('quiz:state', quizPublic(room.gameState, room));
-    addTimer(room, () => quizReveal(room), QUIZ_TIME_MS);
+    addTimer(room, () => quizReveal(room), timeLimitMs);
   } catch (e) {
     console.error('Quiz start failed:', e);
     if (rooms.has(room.code)) {
@@ -1269,13 +1276,14 @@ function quizPublic(gs, room) {
     difficulty: q.difficulty,
     question: q.question,
     options: q.options,
-    timeLimitMs: QUIZ_TIME_MS,
+    timeLimitMs: gs.timeLimitMs,
     startedAt: gs.questionStartTime,
     answersIn: Object.keys(gs.answers).length,
     totalPlayers: room.players.size,
     correctAnswer: gs.phase === 'question' ? null : q.correctAnswer,
     results: gs.phase === 'question' ? null : gs.results,
     scores: gs.scores,
+    correctCounts: gs.correctCounts,
     players: Object.fromEntries([...room.players.values()].map(p => [p.id, { name: p.name, avatar: p.avatar ?? 0 }])),
   };
 }
@@ -1298,13 +1306,25 @@ function quizReveal(room) {
   const gs = room.gameState;
   if (!gs || gs.phase !== 'question') return;
   const q = gs.questions[gs.currentQ];
+
+  const byTime = [...room.players.keys()]
+    .filter(id => gs.answers[id]?.answer === q.correctAnswer)
+    .sort((a, b) => gs.answers[a].timeMs - gs.answers[b].timeMs);
+  const firstCorrectId = byTime[0] ?? null;
+
   const results = {};
   [...room.players.keys()].forEach(id => {
     const ans = gs.answers[id];
     const correct = ans?.answer === q.correctAnswer;
-    const points = correct ? Math.round(500 + 500 * (1 - Math.min(ans.timeMs, QUIZ_TIME_MS) / QUIZ_TIME_MS)) : 0;
+    let points = 0;
+    if (correct) {
+      const elapsed = Math.min(ans.timeMs, gs.timeLimitMs);
+      points = Math.round(500 + 500 * (1 - elapsed / gs.timeLimitMs));
+      if (id === firstCorrectId) points += 200;
+      gs.correctCounts[id] = (gs.correctCounts[id] || 0) + 1;
+    }
     if (gs.scores[id] !== undefined) gs.scores[id] += points;
-    results[id] = { answer: ans?.answer ?? null, correct, points };
+    results[id] = { answer: ans?.answer ?? null, correct, points, firstCorrect: id === firstCorrectId && correct };
   });
   gs.results = results;
   gs.phase = 'reveal';
@@ -1321,7 +1341,7 @@ function advanceQuiz(room) {
   gs.phase = 'question';
   gs.questionStartTime = Date.now();
   io.to(room.code).emit('quiz:state', quizPublic(gs, room));
-  addTimer(room, () => quizReveal(room), QUIZ_TIME_MS);
+  addTimer(room, () => quizReveal(room), gs.timeLimitMs);
 }
 
 function endQuiz(room) {

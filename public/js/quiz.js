@@ -2,6 +2,7 @@ const QUIZ = (() => {
   let state = null;
   let myAnswer = null;
   let timerInterval = null;
+  const LETTERS = ['A', 'B', 'C', 'D'];
 
   // ─── Init ───────────────────────────────────────────────────
 
@@ -27,7 +28,7 @@ const QUIZ = (() => {
   // ─── Socket handlers ────────────────────────────────────────
 
   function onState(newState) {
-    const prevQ = state?.questionIndex;
+    const prevQ     = state?.questionIndex;
     const prevPhase = state?.phase;
     state = newState;
 
@@ -39,9 +40,15 @@ const QUIZ = (() => {
       return;
     }
 
-    if (newState.phase === 'question' && (prevPhase !== 'question' || prevQ !== newState.questionIndex)) {
+    const isNewQuestion = newState.phase === 'question' &&
+      (prevPhase !== 'question' || prevQ !== newState.questionIndex);
+
+    if (isNewQuestion) {
       myAnswer = null;
+      animateQuestion();
       startTimer();
+    } else if (newState.phase === 'reveal' && prevPhase === 'question') {
+      stopTimer();
     }
 
     if (newState.phase === 'gameover') {
@@ -59,6 +66,22 @@ const QUIZ = (() => {
     renderStatus();
   }
 
+  // ─── Animations ─────────────────────────────────────────────
+
+  function animateQuestion() {
+    const qEl = document.getElementById('quiz-question');
+    qEl.classList.remove('quiz-q-in');
+    void qEl.offsetWidth;
+    qEl.classList.add('quiz-q-in');
+
+    document.querySelectorAll('.quiz-opt').forEach((btn, i) => {
+      btn.classList.remove('quiz-opt-in');
+      void btn.offsetWidth;
+      btn.style.animationDelay = `${i * 80}ms`;
+      btn.classList.add('quiz-opt-in');
+    });
+  }
+
   // ─── Render ─────────────────────────────────────────────────
 
   function renderLoading() {
@@ -70,9 +93,9 @@ const QUIZ = (() => {
     document.getElementById('quiz-timer-bar').style.width = '0%';
     document.getElementById('quiz-timer-num').textContent = '';
     document.querySelectorAll('.quiz-opt').forEach(btn => {
-      btn.textContent = '';
+      btn.innerHTML = '';
       btn.disabled = true;
-      btn.className = btn.className.replace(/opt-\S+/g, '').trim();
+      btn.className = 'quiz-opt';
     });
   }
 
@@ -88,7 +111,6 @@ const QUIZ = (() => {
 
   function renderHeader() {
     document.getElementById('quiz-q-num').textContent = `Q ${state.questionIndex + 1} / ${state.totalQuestions}`;
-
     const badge = document.getElementById('quiz-diff-badge');
     badge.textContent = state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1);
     badge.className = 'quiz-diff-badge diff-' + state.difficulty;
@@ -101,19 +123,31 @@ const QUIZ = (() => {
   function renderOptions() {
     document.querySelectorAll('.quiz-opt').forEach((btn, i) => {
       const text = state?.options?.[i] ?? '';
-      btn.textContent = text;
       btn.disabled = false;
+      btn.className = 'quiz-opt';
 
-      const baseClass = ['quiz-opt-red', 'quiz-opt-blue', 'quiz-opt-yellow', 'quiz-opt-green'][i];
-      btn.className = `quiz-opt ${baseClass}`;
+      btn.innerHTML =
+        `<span class="quiz-opt-letter">${LETTERS[i]}</span>` +
+        `<span class="quiz-opt-text">${text}</span>`;
 
       if (state?.phase === 'reveal') {
         btn.disabled = true;
         const isCorrect = text === state.correctAnswer;
-        const isMine = text === myAnswer;
-        if (isCorrect) btn.classList.add('opt-correct');
-        else if (isMine) btn.classList.add('opt-wrong');
-        else btn.classList.add('opt-dimmed');
+        const isMine    = text === myAnswer;
+        const myResult  = state.results?.[App.myId];
+        if (isCorrect) {
+          btn.classList.add('opt-correct');
+          if (isMine && myResult?.firstCorrect) {
+            const badge = document.createElement('span');
+            badge.className = 'quiz-first-badge';
+            badge.textContent = '⚡ First!';
+            btn.appendChild(badge);
+          }
+        } else if (isMine) {
+          btn.classList.add('opt-wrong');
+        } else {
+          btn.classList.add('opt-dimmed');
+        }
       } else if (myAnswer !== null) {
         btn.disabled = true;
         if (text === myAnswer) btn.classList.add('opt-selected');
@@ -129,7 +163,7 @@ const QUIZ = (() => {
       el.textContent = `${state.answersIn} of ${state.totalPlayers} answered`;
       el.className = 'quiz-answer-status';
     } else if (myAnswer !== null) {
-      el.textContent = `Waiting for others… (${state.answersIn}/${state.totalPlayers} answered)`;
+      el.textContent = `Waiting… (${state.answersIn}/${state.totalPlayers} answered)`;
       el.className = 'quiz-answer-status waiting';
     } else {
       el.textContent = `${state.answersIn} of ${state.totalPlayers} answered`;
@@ -147,20 +181,25 @@ const QUIZ = (() => {
     if (!myResult) { el.classList.add('hidden'); return; }
 
     el.classList.remove('hidden');
+    el.classList.remove('delta-pop');
+    void el.offsetWidth;
+
     if (myResult.correct) {
-      el.textContent = `+${myResult.points} pts`;
-      el.className = 'quiz-score-delta delta-correct';
+      let text = `+${myResult.points} pts`;
+      if (myResult.firstCorrect) text += ' ⚡';
+      el.textContent = text;
+      el.className = 'quiz-score-delta delta-correct delta-pop';
     } else if (!myAnswer) {
       el.textContent = "Time's up!";
-      el.className = 'quiz-score-delta delta-timeout';
+      el.className = 'quiz-score-delta delta-timeout delta-pop';
     } else {
       el.textContent = 'Wrong!';
-      el.className = 'quiz-score-delta delta-wrong';
+      el.className = 'quiz-score-delta delta-wrong delta-pop';
     }
   }
 
   function renderScoreboard() {
-    const el = document.getElementById('quiz-scoreboard');
+    const el     = document.getElementById('quiz-scoreboard');
     const listEl = document.getElementById('quiz-scores-list');
     if (!state || state.phase !== 'reveal') { el.classList.add('hidden'); return; }
 
@@ -169,24 +208,27 @@ const QUIZ = (() => {
 
     const sorted = Object.entries(state.scores).sort((a, b) => b[1] - a[1]);
     sorted.forEach(([id, total], rank) => {
-      const result = state.results?.[id];
-      const player = state.players?.[id];
+      const result  = state.results?.[id];
+      const player  = state.players?.[id];
+      const correct = state.correctCounts?.[id] ?? 0;
       const row = document.createElement('div');
       row.className = 'quiz-score-row' + (id === App.myId ? ' quiz-score-me' : '');
+      row.style.animationDelay = `${rank * 60}ms`;
+      row.classList.add('score-row-in');
       row.innerHTML =
         `<span class="quiz-rank">${rank + 1}</span>` +
         `<span class="quiz-player-name">${player?.name ?? '?'}</span>` +
         (result?.correct
-          ? `<span class="quiz-pts-gained">+${result.points}</span>`
+          ? `<span class="quiz-pts-gained">${result.firstCorrect ? '⚡ ' : ''}+${result.points}</span>`
           : `<span class="quiz-pts-miss">—</span>`) +
-        `<span class="quiz-total-score">${total}</span>`;
+        `<span class="quiz-total-score">${total} <span class="quiz-pts-label">pts</span></span>`;
       listEl.appendChild(row);
     });
   }
 
   function renderGameOver() {
     if (!state) return;
-    const sorted = Object.entries(state.scores).sort((a, b) => b[1] - a[1]);
+    const sorted     = Object.entries(state.scores).sort((a, b) => b[1] - a[1]);
     const [winnerId] = sorted[0] ?? [];
     const winnerName = state.players?.[winnerId]?.name ?? '?';
 
@@ -197,12 +239,17 @@ const QUIZ = (() => {
     scoresEl.innerHTML = '';
     const medals = ['🥇', '🥈', '🥉'];
     sorted.forEach(([id, score], i) => {
+      const correct = state.correctCounts?.[id] ?? 0;
+      const total   = state.totalQuestions ?? sorted.length;
       const row = document.createElement('div');
       row.className = 'quiz-score-row' + (id === App.myId ? ' quiz-score-me' : '');
+      row.style.animationDelay = `${i * 80}ms`;
+      row.classList.add('score-row-in');
       row.innerHTML =
         `<span class="quiz-rank">${medals[i] ?? (i + 1) + '.'}</span>` +
         `<span class="quiz-player-name">${state.players?.[id]?.name ?? '?'}</span>` +
-        `<span class="quiz-total-score">${score} pts</span>`;
+        `<span class="quiz-correct-count">${correct}/${total}</span>` +
+        `<span class="quiz-total-score">${score} <span class="quiz-pts-label">pts</span></span>`;
       scoresEl.appendChild(row);
     });
 
@@ -217,14 +264,14 @@ const QUIZ = (() => {
     stopTimer();
     timerInterval = setInterval(() => {
       if (!state || state.phase !== 'question') { stopTimer(); return; }
-      const elapsed = Date.now() - state.startedAt;
+      const elapsed   = Date.now() - state.startedAt;
       const remaining = Math.max(0, state.timeLimitMs - elapsed);
-      const pct = (remaining / state.timeLimitMs) * 100;
+      const pct       = (remaining / state.timeLimitMs) * 100;
       document.getElementById('quiz-timer-bar').style.width = pct + '%';
       const secs = Math.ceil(remaining / 1000);
       document.getElementById('quiz-timer-num').textContent = secs;
-      const numEl = document.getElementById('quiz-timer-num');
-      numEl.classList.toggle('timer-danger', secs <= 5);
+      document.getElementById('quiz-timer-num').classList.toggle('timer-danger', secs <= 5);
+      document.getElementById('quiz-timer-bar').classList.toggle('timer-bar-danger', secs <= 5);
       if (remaining <= 0) stopTimer();
     }, 100);
   }

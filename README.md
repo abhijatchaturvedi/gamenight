@@ -114,7 +114,7 @@ The room creator can tune settings in the lobby before the game starts. Everyone
 | 🔪 Mongolpuri | Discussion time · Voting time |
 | ⭕ Tic Tac Toe | Free play · Best of 3 / 5 / 7 |
 | 🃏 UNO | No configurable settings — standard rules apply |
-| 🧠 Quiz | No configurable settings — 15 questions, 20 seconds each |
+| 🧠 Quiz | Questions (10 / 15 / 20 / 25) · Time per question (10 / 15 / 20 / 30 s) |
 
 ---
 
@@ -131,7 +131,7 @@ In larger games there may be **multiple Doctors** — roughly one per five playe
 Standard UNO rules. Each player starts with 7 cards. On your turn, play a card that matches the top discard by color or value, or draw one from the deck. Special cards: **Skip** ends the next player's turn, **Reverse** flips direction, **+2** forces the next player to draw two, **Wild** lets you choose the active color, **Wild +4** does the same and forces a four-card draw. First player to empty their hand wins. Your name is displayed in the top-left of the game header.
 
 ### 🧠 Quiz
-The server fetches 15 questions from the [Open Trivia Database](https://opentdb.com) at game start and sorts them easy → medium → hard. While questions are loading, players see a "Fetching questions…" screen; the first question appears automatically once the fetch completes (usually under a second, up to ~6 s if the API rate-limits). Each question shows 4 options and a 20-second countdown. Correct answers score 500–1000 points based on speed. After each question the correct answer is revealed alongside the updated leaderboard. Highest total score after all 15 questions wins. Requires internet access when starting the game.
+The server fetches questions from the [Open Trivia Database](https://opentdb.com) at game start and sorts them easy → medium → hard. While questions are loading, players see a "Fetching questions…" screen; the first question appears automatically once the fetch completes (usually under a second, up to ~6 s if the API rate-limits). Each question shows 4 lettered options (A–D) with a countdown timer. Correct answers score 500–1000 points based on speed — the first player to answer correctly earns a +200 bonus (marked with ⚡). After each question the correct answer is revealed with animations alongside the updated leaderboard. The game-over ranking table shows each player's correct-answer count alongside their total score. Requires internet access when starting the game.
 
 ### 🎨 Scribble
 One player draws a secret word on a shared canvas while everyone else types guesses in the chat. Faster correct guesses = more points. The drawer earns bonus points for each correct guesser. Hints appear as time runs low. Roles rotate every turn.

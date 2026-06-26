@@ -86,7 +86,12 @@ const SETTINGS_SCHEMA = {
       options: [{v:0,l:'Free Play ★'},{v:3,l:'Best of 3'},{v:5,l:'Best of 5'},{v:7,l:'Best of 7'}] },
   ],
   uno: [],
-  quiz: [],
+  quiz: [
+    { id: 'numQuestions', label: 'Questions', default: 15,
+      options: [{v:10,l:'10 questions'},{v:15,l:'15 questions ★'},{v:20,l:'20 questions'},{v:25,l:'25 questions'}] },
+    { id: 'timePerQuestion', label: 'Time per Question', default: 20, isTime: true,
+      options: [{v:10,l:'10 sec'},{v:15,l:'15 sec'},{v:20,l:'20 sec ★'},{v:30,l:'30 sec'}] },
+  ],
 };
 
 // ═══════════════════ VIEW MANAGEMENT ═══════════════════
