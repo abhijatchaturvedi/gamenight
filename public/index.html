@@ -43,6 +43,12 @@
         <p>Classic card game</p>
         <span class="badge">2–10 players</span>
       </div>
+      <div class="game-card" data-game="quiz">
+        <div class="game-icon">❓</div>
+        <h3>Quiz</h3>
+        <p>15-question trivia challenge</p>
+        <span class="badge">2+ players</span>
+      </div>
     </div>
   </div>
 
@@ -509,6 +515,56 @@
   </div>
 </div>
 
+<!-- ══════════════════════ QUIZ ══════════════════════ -->
+<div id="view-quiz" class="view">
+  <div class="quiz-layout">
+
+    <div class="quiz-header">
+      <button class="btn-exit btn-sm" id="quiz-btn-exit">🚪 Exit</button>
+      <div class="quiz-progress">
+        <span id="quiz-q-num">Q 1 / 15</span>
+        <span id="quiz-diff-badge" class="quiz-diff-badge">Easy</span>
+      </div>
+      <div class="quiz-timer-wrap">
+        <div class="quiz-timer-track">
+          <div id="quiz-timer-bar" class="quiz-timer-bar"></div>
+        </div>
+        <span id="quiz-timer-num" class="quiz-timer-num">20</span>
+      </div>
+    </div>
+
+    <div id="quiz-question" class="quiz-question"></div>
+
+    <div id="quiz-answer-status" class="quiz-answer-status"></div>
+
+    <div class="quiz-options">
+      <button class="quiz-opt quiz-opt-red"    id="quiz-opt-0"></button>
+      <button class="quiz-opt quiz-opt-blue"   id="quiz-opt-1"></button>
+      <button class="quiz-opt quiz-opt-yellow" id="quiz-opt-2"></button>
+      <button class="quiz-opt quiz-opt-green"  id="quiz-opt-3"></button>
+    </div>
+
+    <div id="quiz-score-delta" class="quiz-score-delta hidden"></div>
+
+    <div id="quiz-scoreboard" class="quiz-scoreboard hidden">
+      <div class="quiz-scoreboard-title">Leaderboard</div>
+      <div id="quiz-scores-list"></div>
+    </div>
+
+    <div id="quiz-gameover" class="uno-overlay-modal hidden">
+      <div class="uno-modal-box quiz-gameover-box">
+        <h2 id="quiz-gameover-title"></h2>
+        <div id="quiz-gameover-scores" class="quiz-gameover-scores"></div>
+        <div class="gameover-actions">
+          <button id="quiz-btn-again" class="btn-primary btn-lg hidden">Play Again</button>
+          <button id="quiz-btn-lobby" class="btn-ghost hidden">Back to Lobby</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- ══════════════════════ RULES MODAL ══════════════════════ -->
 <div id="rules-modal" class="modal-overlay hidden">
   <div class="modal-box">
@@ -521,6 +577,7 @@
       <button class="rules-tab" data-game="tictactoe">⭕ Tic Tac Toe</button>
       <button class="rules-tab" data-game="scribble">🎨 Scribble</button>
       <button class="rules-tab" data-game="uno">🃏 UNO</button>
+      <button class="rules-tab" data-game="quiz">🧠 Quiz</button>
     </div>
 
     <!-- Killer Doctor Rules -->
@@ -651,6 +708,26 @@
       </div>
       <div class="rules-tip">💡 <strong>Tip:</strong> Wild +4 can only be played if you have no other matching card — but this isn't enforced digitally.</div>
     </div>
+
+    <!-- Quiz Rules -->
+    <div id="rules-quiz" class="rules-content">
+      <p class="rules-intro">A 15-question trivia challenge pulled fresh from the internet. Answer fast — speed earns extra points!</p>
+
+      <h3>📋 Format</h3>
+      <div class="rules-steps">
+        <div class="rules-step"><span class="step-num">1</span><div>The game fetches <strong>5 Easy, 5 Medium, and 5 Hard</strong> questions at random from a public trivia database.</div></div>
+        <div class="rules-step"><span class="step-num">2</span><div>Each question shows <strong>4 options</strong>. Tap your answer before the <strong>20-second timer</strong> runs out.</div></div>
+        <div class="rules-step"><span class="step-num">3</span><div>Correct answers score <strong>500–1000 points</strong> based on speed. Wrong or no answer scores <strong>0</strong>.</div></div>
+        <div class="rules-step"><span class="step-num">4</span><div>After each question, the <strong>correct answer is revealed</strong> alongside the updated leaderboard.</div></div>
+        <div class="rules-step"><span class="step-num">5</span><div>The player with the <strong>highest total score</strong> after all 15 questions wins.</div></div>
+      </div>
+
+      <h3>🏆 Win Condition</h3>
+      <div class="rules-wins">
+        <div class="rules-win-card"><span class="win-icon">🧠</span><strong>Highest score after 15 questions wins.</strong> Ties go to whoever was consistently faster across all correct answers.</div>
+      </div>
+      <div class="rules-tip">💡 <strong>Tip:</strong> Questions are randomised from thousands of categories — expect anything from science to pop culture!</div>
+    </div>
   </div>
 </div>
 
@@ -678,5 +755,6 @@
 <script src="js/killerdoctor.js"></script>
 <script src="js/scribble.js"></script>
 <script src="js/uno.js"></script>
+<script src="js/quiz.js"></script>
 </body>
 </html>

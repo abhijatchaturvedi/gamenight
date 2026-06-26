@@ -86,6 +86,7 @@ const SETTINGS_SCHEMA = {
       options: [{v:0,l:'Free Play ★'},{v:3,l:'Best of 3'},{v:5,l:'Best of 5'},{v:7,l:'Best of 7'}] },
   ],
   uno: [],
+  quiz: [],
 };
 
 // ═══════════════════ VIEW MANAGEMENT ═══════════════════
@@ -647,6 +648,8 @@ App.socket.on('uno:state',       data  => { showView('uno');         UNO.onState
 App.socket.on('uno:hand',        data  =>   UNO.onHand(data));
 App.socket.on('uno:choose_color',()    =>   UNO.onChooseColor());
 App.socket.on('uno:game_over',   data  =>   UNO.onGameOver(data));
+App.socket.on('quiz:state',      data  => { showView('quiz');        QUIZ.onState(data); });
+App.socket.on('quiz:answered',   data  =>   QUIZ.onAnswered(data));
 App.socket.on('kd:reconnect',    data  => {
   if (data.avatar !== undefined) App.myAvatar = data.avatar;
   showView('killerdoctor');
@@ -664,4 +667,5 @@ document.addEventListener('DOMContentLoaded', () => {
   KillerDoctor.init();
   Scribble.init();
   UNO.init();
+  QUIZ.init();
 });

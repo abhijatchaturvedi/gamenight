@@ -6,7 +6,7 @@
 [![Socket.io](https://img.shields.io/badge/Socket.io-4.7-010101?style=flat-square&logo=socketdotio)](https://socket.io)
 [![Express](https://img.shields.io/badge/Express-4.18-000000?style=flat-square&logo=express)](https://expressjs.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-7c3aed?style=flat-square)](LICENSE)
-[![Games](https://img.shields.io/badge/games-4-blueviolet?style=flat-square)](#-games)
+[![Games](https://img.shields.io/badge/games-5-blueviolet?style=flat-square)](#-games)
 [![Multiplayer](https://img.shields.io/badge/play-local%20network-0ea5e9?style=flat-square)](#-network-play)
 [![No frameworks](https://img.shields.io/badge/frontend-vanilla%20JS-f59e0b?style=flat-square)](#)
 
@@ -32,6 +32,7 @@ Run one command → share the URL → play instantly.
 |--|------|---------|------|
 | 🔪 | **Mongolpuri** | 4–15 | Social deduction — lies, trust, and midnight murder |
 | 🃏 | **UNO** | 2+ | Classic card game with skips, reverses, and wild cards |
+| 🧠 | **Quiz** | 2+ | 15-question trivia from the internet — faster answers score more |
 | ⭕ | **Tic Tac Toe** | 2+ | Classic 1v1 with score tracking and match formats |
 | 🎨 | **Scribble** | 3+ | Draw a word while your friends race to guess it |
 
@@ -113,6 +114,7 @@ The room creator can tune settings in the lobby before the game starts. Everyone
 | 🔪 Mongolpuri | Discussion time · Voting time |
 | ⭕ Tic Tac Toe | Free play · Best of 3 / 5 / 7 |
 | 🃏 UNO | No configurable settings — standard rules apply |
+| 🧠 Quiz | No configurable settings — 15 questions, 20 seconds each |
 
 ---
 
@@ -127,6 +129,9 @@ In larger games there may be **multiple Doctors** — roughly one per five playe
 
 ### 🃏 UNO
 Standard UNO rules. Each player starts with 7 cards. On your turn, play a card that matches the top discard by color or value, or draw one from the deck. Special cards: **Skip** ends the next player's turn, **Reverse** flips direction, **+2** forces the next player to draw two, **Wild** lets you choose the active color, **Wild +4** does the same and forces a four-card draw. First player to empty their hand wins.
+
+### 🧠 Quiz
+The server fetches 5 easy, 5 medium, and 5 hard questions from the [Open Trivia Database](https://opentdb.com) at game start. Each question shows 4 options and a 20-second countdown. Correct answers score 500–1000 points based on speed (first correct answer earns 1000, last second earns 500). After each question the correct answer is revealed alongside the updated leaderboard. Highest total score after all 15 questions wins. Requires internet access when starting the game.
 
 ### 🎨 Scribble
 One player draws a secret word on a shared canvas while everyone else types guesses in the chat. Faster correct guesses = more points. The drawer earns bonus points for each correct guesser. Hints appear as time runs low. Roles rotate every turn.
@@ -162,7 +167,8 @@ gamenight/
 │       ├── killerdoctor.js  # Mongolpuri client UI
 │       ├── tictactoe.js     # Tic Tac Toe client UI
 │       ├── scribble.js      # Scribble canvas + chat
-│       └── uno.js           # UNO client UI
+│       ├── uno.js           # UNO client UI
+│       └── quiz.js          # Quiz client UI
 ├── start.bat            # Windows one-click launcher
 ├── start.sh             # macOS / Linux launcher
 └── package.json
