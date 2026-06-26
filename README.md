@@ -128,10 +128,10 @@ Players are secretly assigned **Killer**, **Doctor**, or **Villager**. Roles are
 In larger games there may be **multiple Doctors** — roughly one per five players — to keep the game balanced.
 
 ### 🃏 UNO
-Standard UNO rules. Each player starts with 7 cards. On your turn, play a card that matches the top discard by color or value, or draw one from the deck. Special cards: **Skip** ends the next player's turn, **Reverse** flips direction, **+2** forces the next player to draw two, **Wild** lets you choose the active color, **Wild +4** does the same and forces a four-card draw. First player to empty their hand wins.
+Standard UNO rules. Each player starts with 7 cards. On your turn, play a card that matches the top discard by color or value, or draw one from the deck. Special cards: **Skip** ends the next player's turn, **Reverse** flips direction, **+2** forces the next player to draw two, **Wild** lets you choose the active color, **Wild +4** does the same and forces a four-card draw. First player to empty their hand wins. Your name is displayed in the top-left of the game header.
 
 ### 🧠 Quiz
-The server fetches 5 easy, 5 medium, and 5 hard questions from the [Open Trivia Database](https://opentdb.com) at game start. Each question shows 4 options and a 20-second countdown. Correct answers score 500–1000 points based on speed (first correct answer earns 1000, last second earns 500). After each question the correct answer is revealed alongside the updated leaderboard. Highest total score after all 15 questions wins. Requires internet access when starting the game.
+The server fetches 15 questions from the [Open Trivia Database](https://opentdb.com) at game start and sorts them easy → medium → hard. While questions are loading, players see a "Fetching questions…" screen; the first question appears automatically once the fetch completes (usually under a second, up to ~6 s if the API rate-limits). Each question shows 4 options and a 20-second countdown. Correct answers score 500–1000 points based on speed. After each question the correct answer is revealed alongside the updated leaderboard. Highest total score after all 15 questions wins. Requires internet access when starting the game.
 
 ### 🎨 Scribble
 One player draws a secret word on a shared canvas while everyone else types guesses in the chat. Faster correct guesses = more points. The drawer earns bonus points for each correct guesser. Hints appear as time runs low. Roles rotate every turn.
