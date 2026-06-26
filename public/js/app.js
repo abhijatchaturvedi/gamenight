@@ -89,7 +89,7 @@ const SETTINGS_SCHEMA = {
   quiz: [
     { id: 'numQuestions', label: 'Questions', default: 15,
       options: [{v:10,l:'10 questions'},{v:15,l:'15 questions ★'},{v:20,l:'20 questions'},{v:25,l:'25 questions'}] },
-    { id: 'timePerQuestion', label: 'Time per Question', default: 20, isTime: true,
+    { id: 'timePerQuestion', label: 'Time per Question', default: 20,
       options: [{v:10,l:'10 sec'},{v:15,l:'15 sec'},{v:20,l:'20 sec ★'},{v:30,l:'30 sec'}] },
   ],
 };
