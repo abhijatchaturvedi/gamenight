@@ -53,6 +53,7 @@ const QUIZ = (() => {
 
     if (newState.phase === 'gameover') {
       stopTimer();
+      renderSidebar();
       renderGameOver();
       return;
     }
@@ -85,11 +86,15 @@ const QUIZ = (() => {
   // ─── Render ─────────────────────────────────────────────────
 
   function renderLoading() {
+    const me = state?.players?.[App.myId];
+    document.getElementById('quiz-my-avatar').textContent = AVATARS[me?.avatar ?? App.myAvatar]?.emoji ?? '';
+    document.getElementById('quiz-my-name').textContent = me?.name ?? App.myName ?? '';
+    document.getElementById('quiz-sidebar-list').innerHTML = '';
+
     document.getElementById('quiz-question').textContent = 'Fetching questions…';
     document.getElementById('quiz-answer-status').textContent = 'This may take a few seconds';
     document.getElementById('quiz-answer-status').className = 'quiz-answer-status';
     document.getElementById('quiz-score-delta').classList.add('hidden');
-    document.getElementById('quiz-scoreboard').classList.add('hidden');
     document.getElementById('quiz-timer-bar').style.width = '0%';
     document.getElementById('quiz-timer-num').textContent = '';
     document.querySelectorAll('.quiz-opt').forEach(btn => {
@@ -106,7 +111,7 @@ const QUIZ = (() => {
     renderOptions();
     renderStatus();
     renderDelta();
-    renderScoreboard();
+    renderSidebar();
   }
 
   function renderHeader() {
@@ -198,30 +203,35 @@ const QUIZ = (() => {
     }
   }
 
-  function renderScoreboard() {
-    const el     = document.getElementById('quiz-scoreboard');
-    const listEl = document.getElementById('quiz-scores-list');
-    if (!state || state.phase !== 'reveal') { el.classList.add('hidden'); return; }
+  function renderSidebar() {
+    // Player chip
+    const me = state?.players?.[App.myId];
+    document.getElementById('quiz-my-avatar').textContent = AVATARS[me?.avatar ?? App.myAvatar]?.emoji ?? '';
+    document.getElementById('quiz-my-name').textContent = me?.name ?? App.myName ?? '';
 
-    el.classList.remove('hidden');
+    // Live rankings
+    const listEl = document.getElementById('quiz-sidebar-list');
+    if (!listEl || !state?.scores) return;
     listEl.innerHTML = '';
 
     const sorted = Object.entries(state.scores).sort((a, b) => b[1] - a[1]);
-    sorted.forEach(([id, total], rank) => {
-      const result  = state.results?.[id];
-      const player  = state.players?.[id];
-      const correct = state.correctCounts?.[id] ?? 0;
-      const row = document.createElement('div');
-      row.className = 'quiz-score-row' + (id === App.myId ? ' quiz-score-me' : '');
-      row.style.animationDelay = `${rank * 60}ms`;
-      row.classList.add('score-row-in');
+    sorted.forEach(([id, score], rank) => {
+      const player = state.players?.[id];
+      const result = state.results?.[id];
+      const row    = document.createElement('div');
+      row.className = 'quiz-sidebar-row' + (id === App.myId ? ' sidebar-me' : '');
+
+      let deltaHtml = '';
+      if (state.phase === 'reveal' && result?.correct) {
+        deltaHtml = `<span class="quiz-sidebar-delta">${result.firstCorrect ? '⚡' : '+'}${result.points}</span>`;
+      }
+
       row.innerHTML =
-        `<span class="quiz-rank">${rank + 1}</span>` +
-        `<span class="quiz-player-name">${player?.name ?? '?'}</span>` +
-        (result?.correct
-          ? `<span class="quiz-pts-gained">${result.firstCorrect ? '⚡ ' : ''}+${result.points}</span>`
-          : `<span class="quiz-pts-miss">—</span>`) +
-        `<span class="quiz-total-score">${total} <span class="quiz-pts-label">pts</span></span>`;
+        `<span class="quiz-sidebar-rank">${rank + 1}</span>` +
+        `<span class="quiz-sidebar-avatar">${AVATARS[player?.avatar ?? 0]?.emoji ?? '?'}</span>` +
+        `<span class="quiz-sidebar-name">${player?.name ?? '?'}</span>` +
+        deltaHtml +
+        `<span class="quiz-sidebar-score">${score}</span>`;
       listEl.appendChild(row);
     });
   }

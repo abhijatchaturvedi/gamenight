@@ -454,7 +454,10 @@
   <div class="uno-layout">
 
     <div class="uno-header">
-      <span id="uno-my-name" class="uno-my-name"></span>
+      <div class="player-chip" id="uno-player-chip">
+        <span id="uno-my-avatar" class="chip-avatar"></span>
+        <span id="uno-my-name" class="chip-name"></span>
+      </div>
       <h2>UNO</h2>
       <button class="btn-exit btn-sm" id="uno-btn-exit">🚪 Exit</button>
     </div>
@@ -520,38 +523,50 @@
 <div id="view-quiz" class="view">
   <div class="quiz-layout">
 
-    <div class="quiz-header">
-      <button class="btn-exit btn-sm" id="quiz-btn-exit">🚪 Exit</button>
-      <div class="quiz-progress">
-        <span id="quiz-q-num">Q 1 / 15</span>
-        <span id="quiz-diff-badge" class="quiz-diff-badge">Easy</span>
+    <!-- Left sidebar: player identity + live rankings -->
+    <aside class="quiz-sidebar">
+      <div class="player-chip" id="quiz-player-chip">
+        <span id="quiz-my-avatar" class="chip-avatar"></span>
+        <span id="quiz-my-name" class="chip-name"></span>
       </div>
-      <div class="quiz-timer-wrap">
-        <div class="quiz-timer-track">
-          <div id="quiz-timer-bar" class="quiz-timer-bar"></div>
+      <div class="quiz-sidebar-section">
+        <div class="quiz-sidebar-title">Rankings</div>
+        <div id="quiz-sidebar-list" class="quiz-sidebar-list"></div>
+      </div>
+    </aside>
+
+    <!-- Right content -->
+    <div class="quiz-content">
+
+      <div class="quiz-header">
+        <div class="quiz-progress">
+          <span id="quiz-q-num">Q 1 / 15</span>
+          <span id="quiz-diff-badge" class="quiz-diff-badge">Easy</span>
         </div>
-        <span id="quiz-timer-num" class="quiz-timer-num">20</span>
-      </div>
-    </div>
-
-    <div class="quiz-main">
-      <div id="quiz-question" class="quiz-question"></div>
-
-      <div id="quiz-answer-status" class="quiz-answer-status"></div>
-
-      <div class="quiz-options">
-        <button class="quiz-opt" id="quiz-opt-0"></button>
-        <button class="quiz-opt" id="quiz-opt-1"></button>
-        <button class="quiz-opt" id="quiz-opt-2"></button>
-        <button class="quiz-opt" id="quiz-opt-3"></button>
+        <div class="quiz-timer-wrap">
+          <div class="quiz-timer-track">
+            <div id="quiz-timer-bar" class="quiz-timer-bar"></div>
+          </div>
+          <span id="quiz-timer-num" class="quiz-timer-num">20</span>
+        </div>
+        <button class="btn-exit btn-sm" id="quiz-btn-exit">🚪 Exit</button>
       </div>
 
-      <div id="quiz-score-delta" class="quiz-score-delta hidden"></div>
-    </div>
+      <div class="quiz-main">
+        <div id="quiz-question" class="quiz-question"></div>
 
-    <div id="quiz-scoreboard" class="quiz-scoreboard hidden">
-      <div class="quiz-scoreboard-title">Leaderboard</div>
-      <div id="quiz-scores-list"></div>
+        <div id="quiz-answer-status" class="quiz-answer-status"></div>
+
+        <div class="quiz-options">
+          <button class="quiz-opt" id="quiz-opt-0"></button>
+          <button class="quiz-opt" id="quiz-opt-1"></button>
+          <button class="quiz-opt" id="quiz-opt-2"></button>
+          <button class="quiz-opt" id="quiz-opt-3"></button>
+        </div>
+
+        <div id="quiz-score-delta" class="quiz-score-delta hidden"></div>
+      </div>
+
     </div>
 
     <div id="quiz-gameover" class="uno-overlay-modal hidden">

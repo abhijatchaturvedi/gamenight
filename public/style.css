@@ -961,12 +961,28 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
   min-height: 100vh; user-select: none;
 }
 
+/* ── Player identity chip (shared: UNO + Quiz) ── */
+.player-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 999px; padding: 4px 12px 4px 4px;
+  flex-shrink: 0;
+}
+.chip-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; line-height: 1;
+}
+.chip-name {
+  font-size: 0.85rem; font-weight: 600; color: var(--text); white-space: nowrap;
+}
+
 .uno-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
 .uno-header h2 { font-size: 1.2rem; }
-.uno-my-name { font-size: 0.85rem; font-weight: 600; color: var(--muted); min-width: 60px; }
 
 /* Opponents */
 .uno-opponents {
@@ -1161,9 +1177,45 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 }
 
 .quiz-layout {
-  display: flex; flex-direction: column; gap: 14px;
-  max-width: 680px; margin: 0 auto; padding: 16px 16px 24px;
-  min-height: 100vh;
+  display: flex; flex-direction: row;
+  min-height: 100vh; width: 100%;
+}
+
+/* ── Quiz sidebar ── */
+.quiz-sidebar {
+  width: 210px; flex-shrink: 0;
+  background: var(--surface); border-right: 1px solid var(--border);
+  padding: 16px 14px; display: flex; flex-direction: column; gap: 16px;
+  overflow-y: auto;
+}
+
+.quiz-sidebar-section { display: flex; flex-direction: column; gap: 6px; }
+
+.quiz-sidebar-title {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted);
+}
+
+.quiz-sidebar-list { display: flex; flex-direction: column; gap: 3px; }
+
+.quiz-sidebar-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 7px; border-radius: 8px;
+}
+.quiz-sidebar-row.sidebar-me {
+  background: rgba(124,58,237,.18); border: 1px solid rgba(124,58,237,.3);
+}
+
+.quiz-sidebar-rank  { width: 18px; text-align: center; font-size: 0.75rem; color: var(--muted); font-weight: 700; flex-shrink: 0; }
+.quiz-sidebar-avatar { font-size: 1rem; width: 22px; text-align: center; flex-shrink: 0; }
+.quiz-sidebar-name  { flex: 1; font-size: 0.78rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.quiz-sidebar-score { font-size: 0.78rem; color: var(--accent2); font-weight: 700; flex-shrink: 0; }
+.quiz-sidebar-delta { font-size: 0.72rem; color: var(--green); font-weight: 700; flex-shrink: 0; }
+
+/* ── Quiz content column ── */
+.quiz-content {
+  flex: 1; display: flex; flex-direction: column; gap: 14px;
+  padding: 16px 20px 24px; overflow-y: auto; min-width: 0;
 }
 
 .quiz-header {
@@ -1297,16 +1349,6 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 .delta-wrong   { color: var(--red); }
 .delta-timeout { color: var(--muted); }
 
-.quiz-scoreboard {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 14px; margin-top: 4px;
-  width: 100%;
-}
-
-.quiz-scoreboard-title {
-  font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px;
-}
 
 .quiz-score-row {
   display: flex; align-items: center; gap: 10px;
@@ -1327,6 +1369,20 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 
 .quiz-gameover-box { max-width: 460px; width: 92%; }
 .quiz-gameover-scores { margin: 18px 0; display: flex; flex-direction: column; gap: 6px; }
+
+@media (max-width: 700px) {
+  .quiz-layout { flex-direction: column; }
+  .quiz-sidebar {
+    width: 100%; border-right: none; border-bottom: 1px solid var(--border);
+    flex-direction: row; align-items: center; gap: 12px;
+    padding: 10px 12px; overflow-x: auto; flex-wrap: nowrap;
+  }
+  .quiz-sidebar-section { flex-direction: row; align-items: center; gap: 10px; flex-shrink: 0; }
+  .quiz-sidebar-title { display: none; }
+  .quiz-sidebar-list { flex-direction: row; gap: 6px; }
+  .quiz-sidebar-row { padding: 4px 8px; }
+  .quiz-content { padding: 12px 14px 20px; }
+}
 
 @media (max-width: 480px) {
   .quiz-options { grid-template-columns: 1fr; }
