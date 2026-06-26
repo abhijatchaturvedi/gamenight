@@ -324,7 +324,7 @@ const NAME_AVATARS = {
   'abhijat': 11,   // 🧛 Vampire
   'vikas': 49,     // 🦘 Kangaroo
   'pranav': 75,    // 🕷️ Spider
-  'devaansh': 44,  // 🦟 Mosquito
+  'devaansh': 79,  // 🦕 Sauropod
   'garima': 5,     // 🗡️ Rogue
   'harshit': 39,   // 🐒 Monkey
   'deepak': 7,     // 🐺 Wolf
