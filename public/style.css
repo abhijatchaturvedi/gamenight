@@ -966,6 +966,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
   padding: 10px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
 .uno-header h2 { font-size: 1.2rem; }
+.uno-my-name { font-size: 0.85rem; font-weight: 600; color: var(--muted); min-width: 60px; }
 
 /* Opponents */
 .uno-opponents {

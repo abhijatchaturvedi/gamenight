@@ -37,6 +37,7 @@ const UNO = (() => {
     state = newState;
     if (wasMyTurn && !isMyTurn) drawnCardIndex = -1;
     document.getElementById('uno-gameover').classList.add('hidden');
+    document.getElementById('uno-my-name').textContent = state.players?.[App.myId]?.name ?? '';
     render();
   }
 
