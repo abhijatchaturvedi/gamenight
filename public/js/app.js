@@ -618,6 +618,7 @@ App.socket.on('room:joined', ({ code, isHost, gameType }) => {
 App.socket.on('room:error', ({ msg }) => {
   showLoading(false);
   showError('home-error', msg);
+  toast(msg, 5000, 'error');
 });
 
 App.socket.on('lobby:update', data => {
