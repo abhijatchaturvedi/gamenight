@@ -657,13 +657,6 @@ function kdStartNight(room) {
     livingPlayers: alive.map(kdPub),
     deadPlayers: kdDead(gs).map(kdPub),
   });
-  // Send an identical "choose your victim" panel to every living player so the
-  // screen looks the same side-by-side. Only the real killer's pick kills and
-  // only the real doctor's pick saves (resolved by role in kdResolveNight);
-  // a villager's pick is a pure decoy with no effect.
-  alive.forEach(p => {
-    io.to(p.id).emit('kd:killer_action', { targets: alive.map(kdPub) });
-  });
   const nightTime = room.settings?.nightTime ?? 90;
   addTimer(room, () => { if (room.gameState?.phase !== 'night') return; kdAutoNight(room); checkNightDone(room); }, nightTime * 1000);
 }
