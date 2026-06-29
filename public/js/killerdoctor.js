@@ -18,13 +18,6 @@ const KillerDoctor = (() => {
   function init() {
     document.getElementById('kd-toggle-role').addEventListener('click', toggleRole);
 
-    document.getElementById('kd-villager-awake').addEventListener('click', function() {
-      this.textContent = '✓ Confirmed';
-      this.disabled = true;
-      document.getElementById('kd-action-desc').textContent = 'Waiting for others…';
-      App.socket.emit('game:action', { action: 'night_awake' });
-    });
-
     document.getElementById('kd-chat-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') sendChat();
     });
@@ -42,7 +35,6 @@ const KillerDoctor = (() => {
       el.classList.remove('hidden');
     });
     App.socket.on('kd:killer_action', onKillerAction);
-    App.socket.on('kd:doctor_action', onDoctorAction);
     App.socket.on('kd:action_confirmed', onActionConfirmed);
     App.socket.on('kd:night_result', onNightResult);
     App.socket.on('kd:day_start', onDayStart);
@@ -319,14 +311,10 @@ const KillerDoctor = (() => {
     document.getElementById('kd-action-desc').textContent = isAlive ? 'Stay quiet and don\'t react…' : 'You are dead. Watch quietly.';
     document.getElementById('kd-action-targets').innerHTML = '';
     document.getElementById('kd-action-done').classList.add('hidden');
-    const awakeBtn = document.getElementById('kd-villager-awake');
-    if (isAlive) {
-      awakeBtn.textContent = '👁️ I\'m awake';
-      awakeBtn.disabled = false;
-      awakeBtn.classList.remove('hidden');
-    } else {
-      awakeBtn.classList.add('hidden');
-    }
+    // Every living player receives the identical "choose your victim" panel
+    // (kd:killer_action) right after night start, so the old villager-only
+    // "I'm awake" button is no longer used.
+    document.getElementById('kd-villager-awake').classList.add('hidden');
     document.getElementById('kd-night-timer').classList.add('hidden');
     document.getElementById('kd-night-progress').classList.add('hidden');
     setPhase('night');
@@ -363,27 +351,6 @@ const KillerDoctor = (() => {
         btn.classList.add('selected');
         grid.querySelectorAll('.target-btn').forEach(b => b.disabled = true);
         App.socket.emit('game:action', { action: 'night_kill', targetId: t.id });
-      });
-      grid.appendChild(btn);
-    });
-    panel.classList.remove('hidden');
-  }
-
-  function onDoctorAction({ targets }) {
-    const panel = document.getElementById('kd-night-action');
-    document.getElementById('kd-villager-awake').classList.add('hidden');
-    document.getElementById('kd-action-title').textContent = '💉 Choose who to save';
-    document.getElementById('kd-action-desc').textContent = 'Select a player to protect tonight. You may save yourself.';
-    document.getElementById('kd-action-done').classList.add('hidden');
-    const grid = document.getElementById('kd-action-targets');
-    grid.innerHTML = '';
-    targets.forEach(t => {
-      const isMe = t.id === App.myId;
-      const btn = makeTargetBtn({ ...t, name: t.name + (isMe ? ' (You)' : '') }, () => {
-        grid.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        grid.querySelectorAll('.target-btn').forEach(b => b.disabled = true);
-        App.socket.emit('game:action', { action: 'night_save', targetId: t.id });
       });
       grid.appendChild(btn);
     });

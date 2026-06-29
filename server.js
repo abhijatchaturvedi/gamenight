@@ -657,12 +657,12 @@ function kdStartNight(room) {
     livingPlayers: alive.map(kdPub),
     deadPlayers: kdDead(gs).map(kdPub),
   });
-  const killer = kdRole(gs, 'killer');
-  if (killer?.alive) io.to(killer.id).emit('kd:killer_action', { targets: alive.filter(p => p.id !== killer.id).map(kdPub) });
-  else if (killer) killer.hasActedNight = true;
-  kdRoles(gs, 'doctor').forEach(doctor => {
-    if (doctor.alive) io.to(doctor.id).emit('kd:doctor_action', { targets: alive.map(kdPub) });
-    else doctor.hasActedNight = true;
+  // Send an identical "choose your victim" panel to every living player so the
+  // screen looks the same side-by-side. Only the real killer's pick kills and
+  // only the real doctor's pick saves (resolved by role in kdResolveNight);
+  // a villager's pick is a pure decoy with no effect.
+  alive.forEach(p => {
+    io.to(p.id).emit('kd:killer_action', { targets: alive.map(kdPub) });
   });
   const nightTime = room.settings?.nightTime ?? 90;
   addTimer(room, () => { if (room.gameState?.phase !== 'night') return; kdAutoNight(room); checkNightDone(room); }, nightTime * 1000);
@@ -796,18 +796,13 @@ function kdAction(room, socket, data) {
   if (!pd?.alive) return;
   switch (data.action) {
     case 'night_kill':
-      if (gs.phase!=='night'||pd.role!=='killer'||pd.hasActedNight) return;
-      { const t=gs.playerData[data.targetId]; if (!t?.alive||data.targetId===socket.id) return;
+      // Any living player may submit a night pick; the screen is identical for all.
+      // The pick is stored per-player and only matters for the killer (kill) and
+      // doctor (save) at resolution — a villager's pick is an ignored decoy.
+      if (gs.phase!=='night'||pd.hasActedNight) return;
+      { const t=gs.playerData[data.targetId]; if (!t?.alive||(pd.role==='killer'&&data.targetId===socket.id)) return;
         pd.nightChoice=data.targetId; pd.hasActedNight=true;
         socket.emit('kd:action_confirmed',{action:'night_kill'}); kdBroadcastNightProgress(room); checkNightDone(room); } break;
-    case 'night_save':
-      if (gs.phase!=='night'||pd.role!=='doctor'||pd.hasActedNight) return;
-      { const t=gs.playerData[data.targetId]; if (!t?.alive) return;
-        pd.nightChoice=data.targetId; pd.hasActedNight=true;
-        socket.emit('kd:action_confirmed',{action:'night_save'}); kdBroadcastNightProgress(room); checkNightDone(room); } break;
-    case 'night_awake':
-      if (gs.phase!=='night'||pd.role!=='villager'||pd.hasActedNight) return;
-      pd.hasActedNight=true; kdBroadcastNightProgress(room); checkNightDone(room); break;
     case 'vote':
       if (gs.phase!=='voting'||data.targetId===socket.id) return;
       { const t=gs.playerData[data.targetId]; if (!t?.alive) return;
