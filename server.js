@@ -134,7 +134,15 @@ io.on('connection', socket => {
 
     if (room.players.has(socket.id)) return;
     const name = (playerName || '').trim() || `Player${room.players.size + 1}`;
-    room.players.set(socket.id, { id: socket.id, name, avatar: Number(avatar) || 0 });
+    const av = Number(avatar) || 0;
+    const existing = [...room.players.values()];
+    if (existing.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+      socket.emit('room:error', { msg: 'That name is already taken in this room. Please choose a different name.' }); return;
+    }
+    if (existing.some(p => p.avatar === av)) {
+      socket.emit('room:error', { msg: 'That avatar is already taken in this room. Please choose a different avatar.' }); return;
+    }
+    room.players.set(socket.id, { id: socket.id, name, avatar: av });
     playerRooms.set(socket.id, upper);
     socket.join(upper);
     socket.emit('room:joined', { code: upper, isHost: false, gameType: room.gameType });
